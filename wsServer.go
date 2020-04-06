@@ -29,12 +29,12 @@ func newWSServer(w http.ResponseWriter, r *http.Request) *wsServer {
 }
 
 func (w *wsServer) waitForMessage() string {
-	messageType, p, err := w.ReadMessage()
+	_, p, err := w.ReadMessage()
 	if err != nil {
 		log.Panicf("error reading from web socket %v\n", err)
 	}
 	msg := string(p)
-	log.Printf("WS got messages type: %d / content : %v", messageType, msg)
+	//log.Printf("WS got messages type: %d / content : %v", messageType, msg)
 
 	return msg
 }

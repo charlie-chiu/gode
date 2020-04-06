@@ -1,10 +1,11 @@
 package gode
 
 import (
-	"fmt"
 	"html/template"
 	"log"
 	"net/http"
+
+	"github.com/gorilla/websocket"
 )
 
 type WSServer struct {
@@ -34,14 +35,21 @@ func (s *WSServer) demoPageHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl.Execute(w, struct{ WelcomeMsg string }{welcomeMsg})
 }
 
+const (
+	echoPrefix = "your message : "
+	goodbyeMsg = "goodbye."
+)
+
 func (s *WSServer) wsEchoHandler(w http.ResponseWriter, r *http.Request) {
 	ws := newWSServer(w, r)
 
 	msg := ws.waitForMessage()
 
-	ws.write([]byte(fmt.Sprintf("your message : %s", msg)))
+	ws.write([]byte(echoPrefix + msg))
 
-	ws.write([]byte("goodbye."))
+	ws.write([]byte(goodbyeMsg))
 
-	ws.Close()
+	//this well generate close code 1006 at client
+	//ws.Close()
+	ws.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "server closed"))
 }
