@@ -5,11 +5,11 @@ import (
 	"log"
 	"net/http"
 
-	go_ws "github.com/charlie-chiu/go-ws"
+	"github.com/charlie-chiu/gode"
 )
 
 func main() {
-	server := go_ws.NewWSServer()
+	server := gode.NewWSServer()
 
 	fmt.Println("start listen...")
 	err := http.ListenAndServe(":80", server)

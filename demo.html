@@ -20,7 +20,7 @@
         let socket;
 
         function init() {
-            const host = "ws://localhost:80/ws"; // SET THIS TO YOUR SERVER
+            const host = "ws://localhost:80/ws/echo"; // SET THIS TO YOUR SERVER
             try {
                 socket = new WebSocket(host);
                 log('WebSocket - status ' + socket.readyState);
