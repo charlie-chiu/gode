@@ -16,13 +16,17 @@ func TestWebSocket(t *testing.T) {
 		url := makeWebSocketURL(server, "/ws/echo")
 		dialer := mustDialWS(t, url)
 		defer server.Close()
-		defer dialer.Close()
 
 		writeWebSocketMessage(t, dialer, "msg from test")
 
 		assertWSMessage(t, dialer, "your message : msg from test")
 		assertWSMessage(t, dialer, "goodbye.")
 		assertWSCloseWithExpectError(t, dialer, websocket.CloseNormalClosure)
+
+		err := dialer.Close()
+		if err != nil {
+			t.Errorf("problem closing dialer %v", err)
+		}
 	})
 }
 
