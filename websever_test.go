@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/charlie-chiu/gode"
 	"github.com/gorilla/websocket"
@@ -28,6 +29,43 @@ func TestWebSocket(t *testing.T) {
 			t.Errorf("problem closing dialer %v", err)
 		}
 	})
+}
+
+func TestWebSocketTime(t *testing.T) {
+	const timeOut = time.Second
+	t.Run("must response then close normally before timeout", func(t *testing.T) {
+		server := httptest.NewServer(gode.NewWSServer())
+		url := makeWebSocketURL(server, "/ws/time")
+		dialer := mustDialWS(t, url)
+		defer server.Close()
+
+		within(t, timeOut, func() {
+			assertWSMessage(t, dialer, time.Now().Format("15:04:05"))
+			assertWSCloseWithExpectError(t, dialer, websocket.CloseNormalClosure)
+		})
+
+		err := dialer.Close()
+		if err != nil {
+			t.Errorf("problem closing dialer %v", err)
+		}
+	})
+}
+
+func within(t *testing.T, d time.Duration, assert func()) {
+	t.Helper()
+
+	done := make(chan struct{}, 1)
+
+	go func() {
+		assert()
+		done <- struct{}{}
+	}()
+
+	select {
+	case <-time.After(d):
+		t.Error("timed out")
+	case <-done:
+	}
 }
 
 func mustDialWS(t *testing.T, url string) *websocket.Conn {
@@ -55,7 +93,7 @@ func writeWebSocketMessage(t *testing.T, conn *websocket.Conn, message string) {
 func assertWSCloseWithExpectError(t *testing.T, dialer *websocket.Conn, closeCode int) {
 	_, _, err := dialer.ReadMessage()
 	if !websocket.IsCloseError(err, closeCode) {
-		t.Errorf("expected CloseNormalClosure, got %v", err)
+		t.Errorf("expected close code %d, got %v", closeCode, err)
 	}
 }
 
