@@ -11,6 +11,29 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+func TestWebSocketGame(t *testing.T) {
+	const timeOut = time.Second
+	t.Run("/ws/game return ", func(t *testing.T) {
+		server := httptest.NewServer(gode.NewWSServer())
+		url := makeWebSocketURL(server, "/ws/game")
+		dialer := mustDialWS(t, url)
+		defer server.Close()
+
+		within(t, timeOut, func() {
+			assertWSMessage(t, dialer, "onReady")
+			assertWSMessage(t, dialer, "onLogin")
+			assertWSMessage(t, dialer, "onTakeMachine")
+			assertWSMessage(t, dialer, "onLoadInfo")
+			assertWSMessage(t, dialer, "onGetMachineDetail")
+		})
+
+		err := dialer.Close()
+		if err != nil {
+			t.Errorf("problem closing dialer %v", err)
+		}
+	})
+}
+
 func TestWebSocketEcho(t *testing.T) {
 	//ws server must response with 1 sec
 	const timeOut = time.Second

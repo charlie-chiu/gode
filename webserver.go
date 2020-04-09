@@ -20,6 +20,7 @@ func NewWSServer() *WSServer {
 	router.Handle("/", http.HandlerFunc(server.demoPageHandler))
 	router.Handle("/ws/echo", http.HandlerFunc(server.wsEchoHandler))
 	router.Handle("/ws/time", http.HandlerFunc(server.wsTimeHandler))
+	router.Handle("/ws/game", http.HandlerFunc(server.gameHandler))
 
 	server.Handler = router
 
@@ -69,4 +70,13 @@ func (s *WSServer) wsTimeHandler(w http.ResponseWriter, r *http.Request) {
 	ws.write([]byte(time.Now().Format(timeFormat)))
 
 	ws.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "server closed"))
+}
+
+func (s *WSServer) gameHandler(w http.ResponseWriter, r *http.Request) {
+	ws := newWSServer(w, r)
+	ws.WriteMessage(websocket.TextMessage, []byte("onReady"))
+	ws.WriteMessage(websocket.TextMessage, []byte("onLogin"))
+	ws.WriteMessage(websocket.TextMessage, []byte("onTakeMachine"))
+	ws.WriteMessage(websocket.TextMessage, []byte("onLoadInfo"))
+	ws.WriteMessage(websocket.TextMessage, []byte("onGetMachineDetail"))
 }
