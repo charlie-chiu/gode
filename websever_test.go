@@ -11,18 +11,31 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-func TestWebSocket(t *testing.T) {
-	t.Run("/ws/echo echo user message then close normally", func(t *testing.T) {
+func TestWebSocketEcho(t *testing.T) {
+	//ws server must response with 1 sec
+	const timeOut = time.Second
+	const echoPrefix = "ECHO: "
+	t.Run("/ws/echo echo every received message with ECHO: prefix", func(t *testing.T) {
 		server := httptest.NewServer(gode.NewWSServer())
 		url := makeWebSocketURL(server, "/ws/echo")
 		dialer := mustDialWS(t, url)
 		defer server.Close()
 
-		writeWebSocketMessage(t, dialer, "msg from test")
-
-		assertWSMessage(t, dialer, "your message : msg from test")
-		assertWSMessage(t, dialer, "goodbye.")
-		assertWSCloseWithExpectError(t, dialer, websocket.CloseNormalClosure)
+		within(t, timeOut, func() {
+			msg := "msg from test"
+			writeWebSocketMessage(t, dialer, msg)
+			assertWSMessage(t, dialer, echoPrefix+msg)
+		})
+		within(t, timeOut, func() {
+			msg := "another message"
+			writeWebSocketMessage(t, dialer, msg)
+			assertWSMessage(t, dialer, echoPrefix+msg)
+		})
+		within(t, timeOut, func() {
+			msg := "third message"
+			writeWebSocketMessage(t, dialer, msg)
+			assertWSMessage(t, dialer, echoPrefix+msg)
+		})
 
 		err := dialer.Close()
 		if err != nil {

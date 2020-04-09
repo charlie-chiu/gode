@@ -37,23 +37,30 @@ func (s *WSServer) demoPageHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl.Execute(w, struct{ WelcomeMsg string }{welcomeMsg})
 }
 
-const (
-	echoPrefix = "your message : "
-	goodbyeMsg = "goodbye."
-)
+const echoPrefix = "ECHO: "
 
 func (s *WSServer) wsEchoHandler(w http.ResponseWriter, r *http.Request) {
 	ws := newWSServer(w, r)
 
-	msg := ws.waitForMessage()
+	for {
+		messageType, bytes, err := ws.ReadMessage()
+		if err != nil {
+			log.Println("ReadMessage Error: ", err)
+			break
+		}
 
-	ws.write([]byte(echoPrefix + msg))
+		msg := echoPrefix + string(bytes)
+		ws.WriteMessage(messageType, []byte(msg))
+		if err != nil {
+			log.Println("Write Error: ", err)
+			break
+		}
 
-	ws.write([]byte(goodbyeMsg))
+	}
 
 	//this well generate close code 1006 at client
 	//ws.Close()
-	ws.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "server closed"))
+	//ws.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "server closed"))
 }
 
 func (s *WSServer) wsTimeHandler(w http.ResponseWriter, r *http.Request) {
