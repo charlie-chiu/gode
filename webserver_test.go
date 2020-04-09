@@ -122,6 +122,7 @@ func within(t *testing.T, d time.Duration, assert func()) {
 }
 
 func mustDialWS(t *testing.T, url string) *websocket.Conn {
+	t.Helper()
 	dialer, _, err := websocket.DefaultDialer.Dial(url, nil)
 	if err != nil {
 		t.Fatalf("could not open a ws connection on %s %v", url, err)
@@ -144,6 +145,7 @@ func writeWebSocketMessage(t *testing.T, conn *websocket.Conn, message string) {
 
 // Close codes defined in RFC 6455, section 11.7.
 func assertWSCloseWithExpectError(t *testing.T, dialer *websocket.Conn, closeCode int) {
+	t.Helper()
 	_, _, err := dialer.ReadMessage()
 	if !websocket.IsCloseError(err, closeCode) {
 		t.Errorf("expected close code %d, got %v", closeCode, err)
