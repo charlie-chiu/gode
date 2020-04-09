@@ -50,7 +50,7 @@ func (s *WSServer) wsEchoHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		msg := echoPrefix + string(bytes)
-		ws.WriteMessage(messageType, []byte(msg))
+		err = ws.WriteMessage(messageType, []byte(msg))
 		if err != nil {
 			log.Println("Write Error: ", err)
 			break
