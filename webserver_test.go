@@ -13,18 +13,19 @@ import (
 
 func TestWebSocketGame(t *testing.T) {
 	const timeOut = time.Second
-	t.Run("/ws/game return ", func(t *testing.T) {
+	t.Run("/ws/game receive and return binary", func(t *testing.T) {
 		server := httptest.NewServer(gode.NewWSServer())
 		url := makeWebSocketURL(server, "/ws/game")
 		dialer := mustDialWS(t, url)
 		defer server.Close()
 
 		within(t, timeOut, func() {
-			assertWSMessage(t, dialer, "onReady")
-			assertWSMessage(t, dialer, "onLogin")
-			assertWSMessage(t, dialer, "onTakeMachine")
-			assertWSMessage(t, dialer, "onLoadInfo")
-			assertWSMessage(t, dialer, "onGetMachineDetail")
+			mType := websocket.BinaryMessage
+			assertWSReceiveMessage(t, dialer, mType, "onReady")
+			assertWSReceiveMessage(t, dialer, mType, "onLogin")
+			assertWSReceiveMessage(t, dialer, mType, "onTakeMachine")
+			assertWSReceiveMessage(t, dialer, mType, "onLoadInfo")
+			assertWSReceiveMessage(t, dialer, mType, "onGetMachineDetail")
 		})
 
 		err := dialer.Close()
@@ -32,6 +33,22 @@ func TestWebSocketGame(t *testing.T) {
 			t.Errorf("problem closing dialer %v", err)
 		}
 	})
+}
+
+func assertWSReceiveMessage(t *testing.T, dialer *websocket.Conn, expectedType int, want string) {
+	t.Helper()
+
+	mt, p, err := dialer.ReadMessage()
+	if err != nil {
+		t.Fatal("ReadMessageError", err)
+	}
+	if mt != expectedType {
+		t.Errorf("expect got message type %d, got %d", expectedType, mt)
+	}
+	got := string(p)
+	if got != want {
+		t.Errorf("expected message %q from web socket, got %q", want, got)
+	}
 }
 
 func TestWebSocketEcho(t *testing.T) {
