@@ -37,9 +37,8 @@ func (s *WSServer) demoPageHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl.Execute(w, struct{ WelcomeMsg string }{welcomeMsg})
 }
 
-const echoPrefix = "ECHO: "
-
 func (s *WSServer) wsEchoHandler(w http.ResponseWriter, r *http.Request) {
+	const echoPrefix = "ECHO: "
 	ws := newWSServer(w, r)
 
 	for {
