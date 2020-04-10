@@ -11,18 +11,56 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+type StubPhpGame struct {
+	ReadyMessage            string
+	LoginMessage            string
+	LoadInfoMessage         string
+	TakeMachineMessage      string
+	GetMachineDetailMessage string
+}
+
+func (s StubPhpGame) OnReady() string {
+	return s.ReadyMessage
+}
+
+func (s StubPhpGame) OnTakeMachine() string {
+	return s.TakeMachineMessage
+}
+
+func (s StubPhpGame) OnLoadInfo() string {
+	return s.LoadInfoMessage
+}
+
+func (s StubPhpGame) OnGetMachineDetail() string {
+	return s.GetMachineDetailMessage
+}
+
+func (s StubPhpGame) OnLogin() string {
+	return s.LoginMessage
+}
+
 func TestWebSocketGame(t *testing.T) {
 	const timeOut = time.Second
 	t.Run("/ws/game receive and return binary", func(t *testing.T) {
-		server := httptest.NewServer(gode.NewWSServer())
+		stubGame := StubPhpGame{
+			ReadyMessage:            "OnReady",
+			LoginMessage:            "OnLogin",
+			LoadInfoMessage:         "OnLoadInfo",
+			TakeMachineMessage:      "OnTakeMachine",
+			GetMachineDetailMessage: "OnGetMachineDetail",
+		}
+		server := httptest.NewServer(gode.NewWSServer(stubGame))
 		url := makeWebSocketURL(server, "/ws/game")
 		dialer := mustDialWS(t, url)
 		defer server.Close()
 
 		within(t, timeOut, func() {
 			mType := websocket.BinaryMessage
-			onLogin := `{"action":"onLogin","result":{"data":{"COID":2688,"ExchangeRate":1,"GameID":0,"HallID":6,"Sid":"","Test":1,"UserID":0},"event":true}}`
-			assertWSReceiveMessage(t, dialer, mType, onLogin)
+			assertWSReceiveMessage(t, dialer, mType, "OnReady")
+			assertWSReceiveMessage(t, dialer, mType, "OnLogin")
+			assertWSReceiveMessage(t, dialer, mType, "OnTakeMachine")
+			assertWSReceiveMessage(t, dialer, mType, "OnLoadInfo")
+			assertWSReceiveMessage(t, dialer, mType, "OnGetMachineDetail")
 		})
 
 		err := dialer.Close()
@@ -53,7 +91,8 @@ func TestWebSocketEcho(t *testing.T) {
 	const timeOut = time.Second
 	const echoPrefix = "ECHO: "
 	t.Run("/ws/echo echo every received message with ECHO: prefix", func(t *testing.T) {
-		server := httptest.NewServer(gode.NewWSServer())
+		stubGame := StubPhpGame{}
+		server := httptest.NewServer(gode.NewWSServer(stubGame))
 		url := makeWebSocketURL(server, "/ws/echo")
 		dialer := mustDialWS(t, url)
 		defer server.Close()
@@ -84,7 +123,8 @@ func TestWebSocketEcho(t *testing.T) {
 func TestWebSocketTime(t *testing.T) {
 	const timeOut = time.Second
 	t.Run("must response then close normally before timeout", func(t *testing.T) {
-		server := httptest.NewServer(gode.NewWSServer())
+		stubGame := StubPhpGame{}
+		server := httptest.NewServer(gode.NewWSServer(stubGame))
 		url := makeWebSocketURL(server, "/ws/time")
 		dialer := mustDialWS(t, url)
 		defer server.Close()
@@ -160,7 +200,8 @@ func assertWSMessage(t *testing.T, conn *websocket.Conn, want string) {
 
 func TestGet(t *testing.T) {
 	t.Run("/ returns 200", func(t *testing.T) {
-		server := gode.NewWSServer()
+		stubGame := StubPhpGame{}
+		server := gode.NewWSServer(stubGame)
 
 		request, _ := http.NewRequest(http.MethodGet, "/", nil)
 		responseRecorder := httptest.NewRecorder()

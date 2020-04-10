@@ -11,10 +11,20 @@ import (
 
 type WSServer struct {
 	http.Handler
+	g Game
 }
 
-func NewWSServer() *WSServer {
+type Game interface {
+	OnReady() string
+	OnLogin() string
+	OnTakeMachine() string
+	OnLoadInfo() string
+	OnGetMachineDetail() string
+}
+
+func NewWSServer(g Game) *WSServer {
 	server := new(WSServer)
+	server.g = g
 
 	router := http.NewServeMux()
 	router.Handle("/", http.HandlerFunc(server.demoPageHandler))
@@ -74,5 +84,9 @@ func (s *WSServer) wsTimeHandler(w http.ResponseWriter, r *http.Request) {
 
 func (s *WSServer) gameHandler(w http.ResponseWriter, r *http.Request) {
 	ws := newWSServer(w, r)
-	ws.WriteMessage(websocket.BinaryMessage, []byte(`{"action":"onLogin","result":{"data":{"COID":2688,"ExchangeRate":1,"GameID":0,"HallID":6,"Sid":"","Test":1,"UserID":0},"event":true}}`))
+	ws.WriteMessage(websocket.BinaryMessage, []byte(s.g.OnReady()))
+	ws.WriteMessage(websocket.BinaryMessage, []byte(s.g.OnLogin()))
+	ws.WriteMessage(websocket.BinaryMessage, []byte(s.g.OnTakeMachine()))
+	ws.WriteMessage(websocket.BinaryMessage, []byte(s.g.OnLoadInfo()))
+	ws.WriteMessage(websocket.BinaryMessage, []byte(s.g.OnGetMachineDetail()))
 }
