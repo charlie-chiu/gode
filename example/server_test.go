@@ -1,4 +1,4 @@
-package gode_test
+package example_test
 
 import (
 	"net/http"
@@ -7,92 +7,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/charlie-chiu/gode"
+	"github.com/charlie-chiu/gode/example"
 	"github.com/gorilla/websocket"
 )
-
-type StubPhpGame struct {
-	ReadyMessage            string
-	LoginMessage            string
-	LoadInfoMessage         string
-	TakeMachineMessage      string
-	GetMachineDetailMessage string
-}
-
-func (s StubPhpGame) OnReady() string {
-	return s.ReadyMessage
-}
-
-func (s StubPhpGame) OnTakeMachine() string {
-	return s.TakeMachineMessage
-}
-
-func (s StubPhpGame) OnLoadInfo() string {
-	return s.LoadInfoMessage
-}
-
-func (s StubPhpGame) OnGetMachineDetail() string {
-	return s.GetMachineDetailMessage
-}
-
-func (s StubPhpGame) OnLogin() string {
-	return s.LoginMessage
-}
-
-func TestWebSocketGame(t *testing.T) {
-	const timeOut = time.Second
-	t.Run("/ws/game receive and return binary", func(t *testing.T) {
-		stubGame := StubPhpGame{
-			ReadyMessage:            "OnReady",
-			LoginMessage:            "OnLogin",
-			LoadInfoMessage:         "OnLoadInfo",
-			TakeMachineMessage:      "OnTakeMachine",
-			GetMachineDetailMessage: "OnGetMachineDetail",
-		}
-		server := httptest.NewServer(gode.NewWSServer(stubGame))
-		url := makeWebSocketURL(server, "/ws/game")
-		dialer := mustDialWS(t, url)
-		defer server.Close()
-
-		within(t, timeOut, func() {
-			mType := websocket.BinaryMessage
-			assertWSReceiveMessage(t, dialer, mType, "OnReady")
-			assertWSReceiveMessage(t, dialer, mType, "OnLogin")
-			assertWSReceiveMessage(t, dialer, mType, "OnTakeMachine")
-			assertWSReceiveMessage(t, dialer, mType, "OnLoadInfo")
-			assertWSReceiveMessage(t, dialer, mType, "OnGetMachineDetail")
-		})
-
-		err := dialer.Close()
-		if err != nil {
-			t.Errorf("problem closing dialer %v", err)
-		}
-	})
-}
-
-func assertWSReceiveMessage(t *testing.T, dialer *websocket.Conn, expectedType int, want string) {
-	t.Helper()
-
-	mt, p, err := dialer.ReadMessage()
-	if err != nil {
-		t.Fatal("ReadMessageError", err)
-	}
-	if mt != expectedType {
-		t.Errorf("expect got message type %d, got %d", expectedType, mt)
-	}
-	got := string(p)
-	if got != want {
-		t.Errorf("expected message %q from web socket, got %q", want, got)
-	}
-}
 
 func TestWebSocketEcho(t *testing.T) {
 	//ws server must response with 1 sec
 	const timeOut = time.Second
 	const echoPrefix = "ECHO: "
 	t.Run("/ws/echo echo every received message with ECHO: prefix", func(t *testing.T) {
-		stubGame := StubPhpGame{}
-		server := httptest.NewServer(gode.NewWSServer(stubGame))
+		server := httptest.NewServer(example.NewServer())
 		url := makeWebSocketURL(server, "/ws/echo")
 		dialer := mustDialWS(t, url)
 		defer server.Close()
@@ -123,8 +47,7 @@ func TestWebSocketEcho(t *testing.T) {
 func TestWebSocketTime(t *testing.T) {
 	const timeOut = time.Second
 	t.Run("must response then close normally before timeout", func(t *testing.T) {
-		stubGame := StubPhpGame{}
-		server := httptest.NewServer(gode.NewWSServer(stubGame))
+		server := httptest.NewServer(example.NewServer())
 		url := makeWebSocketURL(server, "/ws/time")
 		dialer := mustDialWS(t, url)
 		defer server.Close()
@@ -199,16 +122,26 @@ func assertWSMessage(t *testing.T, conn *websocket.Conn, want string) {
 }
 
 func TestGet(t *testing.T) {
-	t.Run("/ returns 200", func(t *testing.T) {
-		stubGame := StubPhpGame{}
-		server := gode.NewWSServer(stubGame)
+	t.Run("/example returns 200", func(t *testing.T) {
+		server := example.NewServer()
 
-		request, _ := http.NewRequest(http.MethodGet, "/", nil)
+		request, _ := http.NewRequest(http.MethodGet, "/example", nil)
 		responseRecorder := httptest.NewRecorder()
 
 		server.ServeHTTP(responseRecorder, request)
 
 		assertResponseCode(t, responseRecorder.Code, http.StatusOK)
+	})
+
+	t.Run("/not_found returns 404", func(t *testing.T) {
+		server := example.NewServer()
+
+		request, _ := http.NewRequest(http.MethodGet, "/not_found", nil)
+		responseRecorder := httptest.NewRecorder()
+
+		server.ServeHTTP(responseRecorder, request)
+
+		assertResponseCode(t, responseRecorder.Code, http.StatusNotFound)
 	})
 }
 

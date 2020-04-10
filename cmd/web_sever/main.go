@@ -44,7 +44,7 @@ func main() {
 		TakeMachineMessage:      "OnTakeMachine",
 		GetMachineDetailMessage: "OnGetMachineDetail",
 	}
-	server := gode.NewWSServer(stubGame)
+	server := gode.NewServer(stubGame)
 
 	fmt.Println("start listen...")
 	err := http.ListenAndServe(":80", server)

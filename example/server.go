@@ -1,4 +1,4 @@
-package gode
+package example
 
 import (
 	"html/template"
@@ -9,36 +9,30 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-type WSServer struct {
+type Server struct {
 	http.Handler
-	g Game
 }
 
-type Game interface {
-	OnReady() string
-	OnLogin() string
-	OnTakeMachine() string
-	OnLoadInfo() string
-	OnGetMachineDetail() string
-}
-
-func NewWSServer(g Game) *WSServer {
-	server := new(WSServer)
-	server.g = g
+func NewServer() *Server {
+	server := new(Server)
 
 	router := http.NewServeMux()
-	router.Handle("/", http.HandlerFunc(server.demoPageHandler))
+	//this will match all not handled route
+	router.Handle("/", http.HandlerFunc(server.rootHandler))
+	router.Handle("/example", http.HandlerFunc(server.demoPageHandler))
 	router.Handle("/ws/echo", http.HandlerFunc(server.wsEchoHandler))
 	router.Handle("/ws/time", http.HandlerFunc(server.wsTimeHandler))
-	router.Handle("/ws/game", http.HandlerFunc(server.gameHandler))
 
 	server.Handler = router
 
 	return server
 }
+func (s Server) rootHandler(w http.ResponseWriter, r *http.Request) {
+	http.NotFound(w, r)
+}
 
-func (s *WSServer) demoPageHandler(w http.ResponseWriter, r *http.Request) {
-	const demoTemplatePath = "demo.html"
+func (s *Server) demoPageHandler(w http.ResponseWriter, r *http.Request) {
+	const demoTemplatePath = "example/demo.html"
 	tmpl, err := template.ParseFiles(demoTemplatePath)
 	if err != nil {
 		log.Fatalf("problem opening %s %v", demoTemplatePath, err)
@@ -48,7 +42,7 @@ func (s *WSServer) demoPageHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl.Execute(w, struct{ WelcomeMsg string }{welcomeMsg})
 }
 
-func (s *WSServer) wsEchoHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Server) wsEchoHandler(w http.ResponseWriter, r *http.Request) {
 	const echoPrefix = "ECHO: "
 	ws := newWSServer(w, r)
 
@@ -73,20 +67,11 @@ func (s *WSServer) wsEchoHandler(w http.ResponseWriter, r *http.Request) {
 	//ws.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "server closed"))
 }
 
-func (s *WSServer) wsTimeHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Server) wsTimeHandler(w http.ResponseWriter, r *http.Request) {
 	const timeFormat = "15:04:05"
 
 	ws := newWSServer(w, r)
 	ws.write([]byte(time.Now().Format(timeFormat)))
 
 	ws.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "server closed"))
-}
-
-func (s *WSServer) gameHandler(w http.ResponseWriter, r *http.Request) {
-	ws := newWSServer(w, r)
-	ws.WriteMessage(websocket.BinaryMessage, []byte(s.g.OnReady()))
-	ws.WriteMessage(websocket.BinaryMessage, []byte(s.g.OnLogin()))
-	ws.WriteMessage(websocket.BinaryMessage, []byte(s.g.OnTakeMachine()))
-	ws.WriteMessage(websocket.BinaryMessage, []byte(s.g.OnLoadInfo()))
-	ws.WriteMessage(websocket.BinaryMessage, []byte(s.g.OnGetMachineDetail()))
 }
