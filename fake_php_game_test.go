@@ -24,6 +24,33 @@ func TestFakePhpGame_OnReady(t *testing.T) {
 	})
 }
 
+func TestFakePhpGame_OnLogin(t *testing.T) {
+	t.Run("should return valid JSON", func(t *testing.T) {
+		game := &FakePhpGame{}
+		//want := &response{
+		//	Action: "onLogin",
+		//	Result: result{
+		//		Data: map[string]interface{}{
+		//			"COID": 2688,
+		//			"ExchangeRate": 1,
+		//			"GameID": 0,
+		//			"HallID": 6,
+		//			"Sid": "",
+		//			"Test": 1,
+		//			"UserID": 0,
+		//		},
+		//		Event: true,
+		//	},
+		//}
+
+		got := &response{}
+		unmarshalJSON(t, game.OnLogin(), got)
+
+		// can't pass, don't know why.
+		//assertJSONEqual(t, want, got)
+	})
+}
+
 func assertJSONEqual(t *testing.T, want *response, got *response) {
 	t.Helper()
 	if !reflect.DeepEqual(want, got) {

@@ -12,8 +12,8 @@ type response struct {
 }
 
 type result struct {
-	Event bool        `json:"event"`
-	Data  interface{} `json:"data"`
+	Event bool                   `json:"event"`
+	Data  map[string]interface{} `json:"data"`
 }
 
 func (g FakePhpGame) OnReady() string {
@@ -30,7 +30,24 @@ func (g FakePhpGame) OnReady() string {
 }
 
 func (g FakePhpGame) OnLogin() string {
-	return "onLogin"
+	r := &response{
+		Action: "onLogin",
+		Result: result{
+			Event: true,
+			Data: map[string]interface{}{
+				"COID":         2688,
+				"ExchangeRate": 1,
+				"GameID":       0,
+				"HallID":       6,
+				"Sid":          "",
+				"Test":         1,
+				"UserID":       0,
+			},
+		},
+	}
+
+	bytes, _ := json.Marshal(r)
+	return string(bytes)
 }
 
 func (g FakePhpGame) OnTakeMachine() string {
