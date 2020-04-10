@@ -74,9 +74,5 @@ func (s *WSServer) wsTimeHandler(w http.ResponseWriter, r *http.Request) {
 
 func (s *WSServer) gameHandler(w http.ResponseWriter, r *http.Request) {
 	ws := newWSServer(w, r)
-	ws.WriteMessage(websocket.BinaryMessage, []byte("onReady"))
-	ws.WriteMessage(websocket.BinaryMessage, []byte("onLogin"))
-	ws.WriteMessage(websocket.BinaryMessage, []byte("onTakeMachine"))
-	ws.WriteMessage(websocket.BinaryMessage, []byte("onLoadInfo"))
-	ws.WriteMessage(websocket.BinaryMessage, []byte("onGetMachineDetail"))
+	ws.WriteMessage(websocket.BinaryMessage, []byte(`{"action":"onLogin","result":{"data":{"COID":2688,"ExchangeRate":1,"GameID":0,"HallID":6,"Sid":"","Test":1,"UserID":0},"event":true}}`))
 }

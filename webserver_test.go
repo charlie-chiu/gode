@@ -21,11 +21,8 @@ func TestWebSocketGame(t *testing.T) {
 
 		within(t, timeOut, func() {
 			mType := websocket.BinaryMessage
-			assertWSReceiveMessage(t, dialer, mType, "onReady")
-			assertWSReceiveMessage(t, dialer, mType, "onLogin")
-			assertWSReceiveMessage(t, dialer, mType, "onTakeMachine")
-			assertWSReceiveMessage(t, dialer, mType, "onLoadInfo")
-			assertWSReceiveMessage(t, dialer, mType, "onGetMachineDetail")
+			onLogin := `{"action":"onLogin","result":{"data":{"COID":2688,"ExchangeRate":1,"GameID":0,"HallID":6,"Sid":"","Test":1,"UserID":0},"event":true}}`
+			assertWSReceiveMessage(t, dialer, mType, onLogin)
 		})
 
 		err := dialer.Close()
