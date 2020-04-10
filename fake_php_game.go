@@ -1,5 +1,9 @@
 package gode
 
+import (
+	"encoding/json"
+)
+
 type FakePhpGame struct{}
 
 type response struct {
@@ -13,7 +17,16 @@ type result struct {
 }
 
 func (g FakePhpGame) OnReady() string {
-	return `{"action": "onReady", "result":{"event": true}}`
+	r := &response{
+		Action: "onReady",
+		Result: result{
+			Event: true,
+			Data:  nil,
+		},
+	}
+	bytes, _ := json.Marshal(r)
+
+	return string(bytes)
 }
 
 func (g FakePhpGame) OnLogin() string {
