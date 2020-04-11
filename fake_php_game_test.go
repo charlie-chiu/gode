@@ -27,34 +27,41 @@ func TestFakePhpGame_OnReady(t *testing.T) {
 func TestFakePhpGame_OnLogin(t *testing.T) {
 	t.Run("should return valid JSON", func(t *testing.T) {
 		game := &FakePhpGame{}
-		//want := &response{
-		//	Action: "onLogin",
-		//	Result: result{
-		//		Data: map[string]interface{}{
-		//			"COID": 2688,
-		//			"ExchangeRate": 1,
-		//			"GameID": 0,
-		//			"HallID": 6,
-		//			"Sid": "",
-		//			"Test": 1,
-		//			"UserID": 0,
-		//		},
-		//		Event: true,
-		//	},
-		//}
+		want := &response{
+			Action: "onLogin",
+			Result: result{
+				Data: map[string]interface{}{
+					"COID":         2688,
+					"ExchangeRate": 1,
+					"GameID":       0,
+					"HallID":       6,
+					"Sid":          "",
+					"Test":         1,
+					"UserID":       0,
+				},
+				Event: true,
+			},
+		}
 
 		got := &response{}
 		unmarshalJSON(t, game.OnLogin(), got)
 
-		// can't pass, don't know why.
-		//assertJSONEqual(t, want, got)
+		assertJSONEqual(t, want, got)
 	})
 }
 
 func assertJSONEqual(t *testing.T, want *response, got *response) {
+	// json.unmarshal will store float64 for JSON numbers
+	// see https://golang.org/pkg/encoding/json/#Unmarshal for more
+	for k, v := range want.Result.Data {
+		if reflect.TypeOf(v).Kind() == reflect.Int {
+			want.Result.Data[k] = float64(v.(int))
+		}
+	}
+
 	t.Helper()
 	if !reflect.DeepEqual(want, got) {
-		t.Errorf("want %v got %v", want, got)
+		t.Errorf("want %#v got %#v", want, got)
 	}
 }
 
