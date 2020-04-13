@@ -1,6 +1,7 @@
 package gode_test
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -46,7 +47,8 @@ func (s StubPhpGame) OnLogin() string {
 
 func TestWebSocketGame(t *testing.T) {
 	const timeOut = time.Second
-	t.Run("/ws/game receive and return binary", func(t *testing.T) {
+
+	t.Run("/ws/game receive and return in binary", func(t *testing.T) {
 		stubGame := StubPhpGame{
 			ReadyMessage:            "OnReady",
 			LoginMessage:            "OnLogin",
@@ -61,13 +63,15 @@ func TestWebSocketGame(t *testing.T) {
 		defer server.Close()
 
 		within(t, timeOut, func() {
-			mType := websocket.BinaryMessage
-			assertWSReceiveMessage(t, dialer, mType, "OnReady")
-			assertWSReceiveMessage(t, dialer, mType, "OnLogin")
-			assertWSReceiveMessage(t, dialer, mType, "OnTakeMachine")
-			assertWSReceiveMessage(t, dialer, mType, "OnLoadInfo")
-			assertWSReceiveMessage(t, dialer, mType, "OnGetMachineDetail")
-			assertWSReceiveMessage(t, dialer, mType, "OnBeginGame")
+			assertWSReceiveMessage(t, dialer, websocket.BinaryMessage, "OnReady")
+			assertWSReceiveMessage(t, dialer, websocket.BinaryMessage, "OnLogin")
+			assertWSReceiveMessage(t, dialer, websocket.BinaryMessage, "OnTakeMachine")
+			assertWSReceiveMessage(t, dialer, websocket.BinaryMessage, "OnLoadInfo")
+			assertWSReceiveMessage(t, dialer, websocket.BinaryMessage, "OnGetMachineDetail")
+		})
+		within(t, timeOut, func() {
+			dialer.WriteMessage(websocket.BinaryMessage, []byte(`{"action":"beginGame4"}`))
+			assertWSReceiveMessage(t, dialer, websocket.BinaryMessage, "OnBeginGame")
 		})
 
 		err := dialer.Close()

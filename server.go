@@ -1,6 +1,7 @@
 package gode
 
 import (
+	"encoding/json"
 	"html/template"
 	"log"
 	"net/http"
@@ -46,6 +47,12 @@ func (s *Server) demoPageHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl.Execute(w, struct{ WelcomeMsg string }{welcomeMsg})
 }
 
+type beginGameSchema struct {
+	Action  string                 `json:"action"`
+	SID     string                 `json:"sid"`
+	BetInfo map[string]interface{} `json:"betInfo"`
+}
+
 func (s *Server) gameHandler(w http.ResponseWriter, r *http.Request) {
 	ws := newWSServer(w, r)
 	ws.WriteMessage(websocket.BinaryMessage, []byte(s.g.OnReady()))
@@ -54,4 +61,32 @@ func (s *Server) gameHandler(w http.ResponseWriter, r *http.Request) {
 	ws.WriteMessage(websocket.BinaryMessage, []byte(s.g.OnLoadInfo()))
 	ws.WriteMessage(websocket.BinaryMessage, []byte(s.g.OnGetMachineDetail()))
 	ws.WriteMessage(websocket.BinaryMessage, []byte(s.g.BeginGame()))
+
+	for {
+		messageType, bytes, err := ws.ReadMessage()
+		if err != nil {
+			log.Println("ReadMessage Error: ", err)
+			break
+		}
+
+		if !json.Valid(bytes) {
+			continue
+		}
+
+		b := &beginGameSchema{}
+		err = json.Unmarshal(bytes, b)
+		if err != nil {
+			log.Println("Json Unmarshal Error: ", err)
+			continue
+		}
+
+		//  {"action":"beginGame4"}
+		if b.Action == "beginGame4" {
+			err = ws.WriteMessage(messageType, []byte(s.g.BeginGame()))
+			if err != nil {
+				log.Println("Write Error: ", err)
+				break
+			}
+		}
+	}
 }
