@@ -58,7 +58,9 @@ func assertJSONEqual(t *testing.T, want *response, got *response) {
 
 	t.Helper()
 	if !reflect.DeepEqual(want, got) {
-		t.Errorf("want %#v got %#v", want, got)
+		fmt.Printf("want: %#v \n", want)
+		fmt.Printf(" got: %#v \n", got)
+		t.Errorf("not matched")
 	}
 }
 
