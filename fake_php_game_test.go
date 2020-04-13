@@ -117,6 +117,41 @@ func TestFakePhpGame(t *testing.T) {
 		unmarshalJSON(t, game.OnLoadInfo(), got)
 		assertJSONEqual(t, want, got)
 	})
+
+	t.Run("onGetMachineDetail", func(t *testing.T) {
+		game := &FakePhpGame{}
+		want := &response{
+			Action: "onGetMachineDetail",
+			Result: result{
+				Event: true,
+				Data: map[string]interface{}{
+					"Balance":      99999999.99,
+					"Base":         "1:10,1:5,1:2,1:1,2:1,5:1,10:1",
+					"BetBase":      "",
+					"BetTotal":     "1000000.0000",
+					"Credit":       "0.00",
+					"Currency":     "RMB",
+					"DefaultBase":  "1:1",
+					"ExchangeRate": "1",
+					"HallID":       6,
+					"LastBetTime":  "2019-09-27 00:36:55",
+					"LoginName":    "fakeuser",
+					"PayTotal":     "975000.0000",
+					"Percent":      "99",
+					"PercentLow":   "96",
+					"Status":       "N",
+					"Test":         true,
+					"UserID":       "000000000",
+					"WagersID":     "0",
+					"event":        true,
+				},
+			},
+		}
+		got := &response{}
+
+		unmarshalJSON(t, game.OnGetMachineDetail(), got)
+		assertJSONEqual(t, want, got)
+	})
 }
 
 func assertJSONEqual(t *testing.T, want *response, got *response) {
