@@ -17,6 +17,11 @@ type StubPhpGame struct {
 	LoadInfoMessage         string
 	TakeMachineMessage      string
 	GetMachineDetailMessage string
+	BeginGameMessage        string
+}
+
+func (s StubPhpGame) BeginGame() string {
+	return s.BeginGameMessage
 }
 
 func (s StubPhpGame) OnReady() string {
@@ -48,6 +53,7 @@ func TestWebSocketGame(t *testing.T) {
 			LoadInfoMessage:         "OnLoadInfo",
 			TakeMachineMessage:      "OnTakeMachine",
 			GetMachineDetailMessage: "OnGetMachineDetail",
+			BeginGameMessage:        "OnBeginGame",
 		}
 		server := httptest.NewServer(gode.NewServer(stubGame))
 		url := makeWebSocketURL(server, "/ws/game")
@@ -61,6 +67,7 @@ func TestWebSocketGame(t *testing.T) {
 			assertWSReceiveMessage(t, dialer, mType, "OnTakeMachine")
 			assertWSReceiveMessage(t, dialer, mType, "OnLoadInfo")
 			assertWSReceiveMessage(t, dialer, mType, "OnGetMachineDetail")
+			assertWSReceiveMessage(t, dialer, mType, "OnBeginGame")
 		})
 
 		err := dialer.Close()
