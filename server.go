@@ -19,6 +19,7 @@ type Game interface {
 	OnTakeMachine() string
 	OnLoadInfo() string
 	OnGetMachineDetail() string
+	BeginGame() string
 }
 
 func NewServer(g Game) *Server {
@@ -52,4 +53,5 @@ func (s *Server) gameHandler(w http.ResponseWriter, r *http.Request) {
 	ws.WriteMessage(websocket.BinaryMessage, []byte(s.g.OnTakeMachine()))
 	ws.WriteMessage(websocket.BinaryMessage, []byte(s.g.OnLoadInfo()))
 	ws.WriteMessage(websocket.BinaryMessage, []byte(s.g.OnGetMachineDetail()))
+	ws.WriteMessage(websocket.BinaryMessage, []byte(s.g.BeginGame()))
 }

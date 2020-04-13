@@ -2,6 +2,8 @@ package gode
 
 import (
 	"encoding/json"
+	"math/rand"
+	"time"
 )
 
 type FakePhpGame struct{}
@@ -149,4 +151,16 @@ func (g FakePhpGame) OnGetMachineDetail() string {
 
 	bytes, _ := json.Marshal(r)
 	return string(bytes)
+}
+
+const beginGameResult1 = `{"action":"onBeginGame","result":{"data":{"AllPayTotal":0,"AxisLocation":"4-78-57-27-45","BBJackpot":{},"BetInfo":{},"BetValue":50,"Cards":["9-10-5","2-6-10","6-9-9","5-10-7","9-1-7"],"Credit":49950,"Credit_End":49950,"EncryID":null,"FreeGameBonusTime":{"ScatterBonus":[[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0]]},"GamePayTotal":{"Lines":0},"LinePayoff":0,"Lines":[{"Element":["9","2","9"],"ElementID":9,"GridNum":3,"Grids":["1","4","8"],"Payoff":10},{"Element":["9","2","9"],"ElementID":9,"GridNum":3,"Grids":["1","4","9"],"Payoff":10}],"PayTotal":0,"PayValue":0,"RollerNumber":0,"WagersID":310631818546},"event":true}}`
+const beginGameResult2 = `{"action":"onBeginGame","result":{"data":{"AllPayTotal":0,"AxisLocation":"1-2-3-4-5","BBJackpot":{},"BetInfo":{},"BetValue":50,"Cards":["1-2-3","2-3-4","3-4-5","4-5-6","5-6-7"],"Credit":49950,"Credit_End":49950,"EncryID":null,"FreeGameBonusTime":{"ScatterBonus":[[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0]]},"GamePayTotal":{"Lines":0},"LinePayoff":0,"Lines":[],"PayTotal":0,"PayValue":0,"RollerNumber":0,"WagersID":310631818546},"event":true}}`
+
+func (g FakePhpGame) BeginGame() string {
+	rand.Seed(time.Now().UnixNano())
+	if rand.Intn(10)%2 == 0 {
+		return beginGameResult1
+	} else {
+		return beginGameResult2
+	}
 }

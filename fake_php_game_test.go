@@ -154,6 +154,17 @@ func TestFakePhpGame(t *testing.T) {
 	})
 }
 
+func TestFakePhpGame_BeginGame(t *testing.T) {
+	//todo: refactor this test ...maybe
+	g := &FakePhpGame{}
+	t.Run("got result 1", func(t *testing.T) {
+		got := g.BeginGame()
+		if got != beginGameResult1 && got != beginGameResult2 {
+			t.Errorf("begin game result not matched")
+		}
+	})
+}
+
 func assertJSONEqual(t *testing.T, want *response, got *response) {
 	// json.unmarshal will store float64 for JSON numbers
 	// see https://golang.org/pkg/encoding/json/#Unmarshal for more
