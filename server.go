@@ -21,6 +21,8 @@ type Game interface {
 	OnLoadInfo() string
 	OnGetMachineDetail() string
 	BeginGame() string
+	OnCreditExchange() string
+	OnBalanceExchange() string
 }
 
 func NewServer(g Game) *Server {

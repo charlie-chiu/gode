@@ -152,6 +152,28 @@ func TestFakePhpGame(t *testing.T) {
 		unmarshalJSON(t, game.OnGetMachineDetail(), got)
 		assertJSONEqual(t, want, got)
 	})
+
+	t.Run("onCreditExchange", func(t *testing.T) {
+		g := &FakePhpGame{}
+		want := `{"action":"onCreditExchange","result":{"data":{"Balance":99949999.99,"BetBase":"1:1","Credit":100,"event":true},"event":true}}`
+		got := g.OnCreditExchange()
+		assertEqual(t, got, want)
+	})
+
+	t.Run("onBalanceExchange", func(t *testing.T) {
+		g := &FakePhpGame{}
+		want := `{"action":"onBalanceExchange","result":{"data":{"Amount":50000,"Balance":9999999.99,"BetBase":"","ErrorID":1354000000,"TransCredit":"0.00","event":true},"event":true}}`
+		got := g.OnBalanceExchange()
+		assertEqual(t, got, want)
+	})
+}
+
+func assertEqual(t *testing.T, got, want string) {
+	if got != want {
+		fmt.Printf("want: %#v \n", want)
+		fmt.Printf(" got: %#v \n", got)
+		t.Errorf("not matched")
+	}
 }
 
 func TestFakePhpGame_BeginGame(t *testing.T) {
