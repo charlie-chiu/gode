@@ -19,6 +19,16 @@ type StubPhpGame struct {
 	TakeMachineMessage      string
 	GetMachineDetailMessage string
 	BeginGameMessage        string
+	BalanceExchangeMsg      string
+	CreditExchangeMsg       string
+}
+
+func (s StubPhpGame) OnCreditExchange() string {
+	return s.CreditExchangeMsg
+}
+
+func (s StubPhpGame) OnBalanceExchange() string {
+	return s.BalanceExchangeMsg
 }
 
 func (s StubPhpGame) BeginGame() string {
