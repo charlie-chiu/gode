@@ -11,7 +11,7 @@ func TestFakePhpGame(t *testing.T) {
 	t.Run("onReady", func(t *testing.T) {
 		game := &FakePhpGame{}
 		want := &response{
-			Action: "onReady",
+			Action: "ready",
 			Result: result{
 				Event: true,
 				//Data:  ???,
@@ -68,7 +68,7 @@ func TestFakePhpGame(t *testing.T) {
 	t.Run("onLoadInfo", func(t *testing.T) {
 		game := &FakePhpGame{}
 		want := &response{
-			Action: "onLoadInfo",
+			Action: "onOnLoadInfo2",
 			Result: result{
 				Event: true,
 				Data: map[string]interface{}{

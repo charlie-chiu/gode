@@ -20,7 +20,7 @@ type result struct {
 
 func (g FakePhpGame) OnReady() string {
 	r := &response{
-		Action: "onReady",
+		Action: "ready",
 		Result: result{
 			Event: true,
 			Data:  nil,
@@ -71,7 +71,7 @@ func (g FakePhpGame) OnTakeMachine() string {
 
 func (g FakePhpGame) OnLoadInfo() string {
 	r := &response{
-		Action: "onLoadInfo",
+		Action: "onOnLoadInfo2",
 		Result: result{
 			Event: true,
 			Data: map[string]interface{}{
