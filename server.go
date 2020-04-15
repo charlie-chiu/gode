@@ -67,32 +67,35 @@ type wsData struct {
 
 func (s *Server) gameHandler(w http.ResponseWriter, r *http.Request) {
 	ws := newWSServer(w, r)
-	writeBinaryMsg(ws, s.g.OnReady())
+	//tell client we are ready to handle msg
+	s.writeBinaryMsg(ws, s.g.OnReady())
 
 	wsMsg := make(chan []byte)
-
-	go func() {
-		for {
-			_, msg, err := ws.ReadMessage()
-			if err != nil {
-				log.Println("ReadMessage Error: ", err)
-				break
-			}
-
-			if !json.Valid(msg) {
-				log.Println("not Valid JSON", string(msg))
-				continue
-			}
-
-			wsMsg <- msg
-		}
-	}()
+	go s.readMessage(ws, wsMsg)
 
 	for {
 		select {
 		case msg := <-wsMsg:
 			s.handleMessage(ws, msg)
 		}
+	}
+}
+
+func (s *Server) readMessage(ws *wsServer, wsMsg chan []byte) {
+	for {
+		_, msg, err := ws.ReadMessage()
+		if err != nil {
+			log.Println("ReadMessage Error: ", err)
+			break
+		}
+
+		//maybe shouldn't valid JSON here
+		if !json.Valid(msg) {
+			log.Println("not Valid JSON", string(msg))
+			continue
+		}
+
+		wsMsg <- msg
 	}
 }
 
@@ -105,22 +108,22 @@ func (s *Server) handleMessage(ws *wsServer, msg []byte) {
 
 	switch data.Action {
 	case login:
-		writeBinaryMsg(ws, s.g.OnLogin())
-		writeBinaryMsg(ws, s.g.OnTakeMachine())
+		s.writeBinaryMsg(ws, s.g.OnLogin())
+		s.writeBinaryMsg(ws, s.g.OnTakeMachine())
 	case onLoadInfo:
-		writeBinaryMsg(ws, s.g.OnLoadInfo())
+		s.writeBinaryMsg(ws, s.g.OnLoadInfo())
 	case getMachineDetail:
-		writeBinaryMsg(ws, s.g.OnGetMachineDetail())
+		s.writeBinaryMsg(ws, s.g.OnGetMachineDetail())
 	case beginGame:
-		writeBinaryMsg(ws, s.g.BeginGame())
+		s.writeBinaryMsg(ws, s.g.BeginGame())
 	case creditExchange:
-		writeBinaryMsg(ws, s.g.OnCreditExchange())
+		s.writeBinaryMsg(ws, s.g.OnCreditExchange())
 	case balanceExchange:
-		writeBinaryMsg(ws, s.g.OnBalanceExchange())
+		s.writeBinaryMsg(ws, s.g.OnBalanceExchange())
 	}
 }
 
-func writeBinaryMsg(ws *wsServer, msg []byte) {
+func (s *Server) writeBinaryMsg(ws *wsServer, msg []byte) {
 	err := ws.WriteMessage(websocket.BinaryMessage, msg)
 	if err != nil {
 		log.Println("Write Error: ", err)
