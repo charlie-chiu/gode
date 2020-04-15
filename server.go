@@ -15,14 +15,14 @@ type Server struct {
 }
 
 type Game interface {
-	OnReady() string
-	OnLogin() string
-	OnTakeMachine() string
-	OnLoadInfo() string
-	OnGetMachineDetail() string
-	BeginGame() string
-	OnCreditExchange() string
-	OnBalanceExchange() string
+	OnReady() []byte
+	OnLogin() []byte
+	OnTakeMachine() []byte
+	OnLoadInfo() []byte
+	OnGetMachineDetail() []byte
+	BeginGame() []byte
+	OnCreditExchange() []byte
+	OnBalanceExchange() []byte
 }
 
 func NewServer(g Game) *Server {
@@ -93,8 +93,8 @@ func (s *Server) gameHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func writeBinaryMsg(ws *wsServer, msg string) {
-	err := ws.WriteMessage(websocket.BinaryMessage, []byte(msg))
+func writeBinaryMsg(ws *wsServer, msg []byte) {
+	err := ws.WriteMessage(websocket.BinaryMessage, msg)
 	if err != nil {
 		log.Println("Write Error: ", err)
 	}

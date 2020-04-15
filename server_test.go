@@ -12,45 +12,45 @@ import (
 )
 
 type StubPhpGame struct {
-	ReadyMessage            string
-	LoginMessage            string
-	LoadInfoMessage         string
-	TakeMachineMessage      string
-	GetMachineDetailMessage string
-	BeginGameMessage        string
-	BalanceExchangeMsg      string
-	CreditExchangeMsg       string
+	ReadyMessage            []byte
+	LoginMessage            []byte
+	LoadInfoMessage         []byte
+	TakeMachineMessage      []byte
+	GetMachineDetailMessage []byte
+	BeginGameMessage        []byte
+	BalanceExchangeMsg      []byte
+	CreditExchangeMsg       []byte
 }
 
-func (s StubPhpGame) OnCreditExchange() string {
+func (s StubPhpGame) OnCreditExchange() []byte {
 	return s.CreditExchangeMsg
 }
 
-func (s StubPhpGame) OnBalanceExchange() string {
+func (s StubPhpGame) OnBalanceExchange() []byte {
 	return s.BalanceExchangeMsg
 }
 
-func (s StubPhpGame) BeginGame() string {
+func (s StubPhpGame) BeginGame() []byte {
 	return s.BeginGameMessage
 }
 
-func (s StubPhpGame) OnReady() string {
+func (s StubPhpGame) OnReady() []byte {
 	return s.ReadyMessage
 }
 
-func (s StubPhpGame) OnTakeMachine() string {
+func (s StubPhpGame) OnTakeMachine() []byte {
 	return s.TakeMachineMessage
 }
 
-func (s StubPhpGame) OnLoadInfo() string {
+func (s StubPhpGame) OnLoadInfo() []byte {
 	return s.LoadInfoMessage
 }
 
-func (s StubPhpGame) OnGetMachineDetail() string {
+func (s StubPhpGame) OnGetMachineDetail() []byte {
 	return s.GetMachineDetailMessage
 }
 
-func (s StubPhpGame) OnLogin() string {
+func (s StubPhpGame) OnLogin() []byte {
 	return s.LoginMessage
 }
 
@@ -59,12 +59,12 @@ func TestWebSocketGame(t *testing.T) {
 
 	t.Run("/ws/game can process game", func(t *testing.T) {
 		stubGame := StubPhpGame{
-			ReadyMessage:            "ready",
-			LoginMessage:            "OnLogin",
-			LoadInfoMessage:         "OnLoadInfo",
-			TakeMachineMessage:      "OnTakeMachine",
-			GetMachineDetailMessage: "OnGetMachineDetail",
-			BeginGameMessage:        "OnBeginGame",
+			ReadyMessage:            []byte("ready"),
+			LoginMessage:            []byte("OnLogin"),
+			LoadInfoMessage:         []byte("OnLoadInfo"),
+			TakeMachineMessage:      []byte("OnTakeMachine"),
+			GetMachineDetailMessage: []byte("OnGetMachineDetail"),
+			BeginGameMessage:        []byte("OnBeginGame"),
 		}
 		server := httptest.NewServer(gode.NewServer(stubGame))
 		url := makeWebSocketURL(server, "/ws/game")

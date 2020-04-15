@@ -28,15 +28,14 @@ func newWSServer(w http.ResponseWriter, r *http.Request) *wsServer {
 	return &wsServer{conn}
 }
 
-func (w *wsServer) waitForMessage() string {
-	_, p, err := w.ReadMessage()
+func (w *wsServer) waitForMessage() []byte {
+	_, data, err := w.ReadMessage()
 	if err != nil {
 		log.Panicf("error reading from web socket %v\n", err)
 	}
-	msg := string(p)
 	//log.Printf("WS got messages type: %d / content : %v", messageType, msg)
 
-	return msg
+	return data
 }
 
 func (w *wsServer) write(p []byte) (n int, err error) {
