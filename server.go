@@ -46,7 +46,10 @@ func (s *Server) demoPageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	const welcomeMsg = "a simple API demo page"
-	tmpl.Execute(w, struct{ WelcomeMsg string }{welcomeMsg})
+	err = tmpl.Execute(w, struct{ WelcomeMsg string }{welcomeMsg})
+	if err != nil {
+		log.Fatal("template.Execute Error", err)
+	}
 }
 
 type wsData struct {
