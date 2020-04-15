@@ -71,14 +71,14 @@ func (s *Server) gameHandler(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		d := &wsData{}
-		err = json.Unmarshal(bytes, d)
+		data := &wsData{}
+		err = json.Unmarshal(bytes, data)
 		if err != nil {
 			log.Println("Json Unmarshal Error: ", err)
 			break
 		}
 
-		switch d.Action {
+		switch data.Action {
 		case "loginBySid":
 			writeBinaryMsg(ws, s.g.OnLogin())
 			writeBinaryMsg(ws, s.g.OnTakeMachine())
