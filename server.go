@@ -49,23 +49,16 @@ func (s *Server) demoPageHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl.Execute(w, struct{ WelcomeMsg string }{welcomeMsg})
 }
 
-type beginGameSchema struct {
-	Action  string                 `json:"action"`
-	SID     string                 `json:"sid"`
-	BetInfo map[string]interface{} `json:"betInfo"`
+type wsData struct {
+	Action string `json:"action"`
 }
 
 func (s *Server) gameHandler(w http.ResponseWriter, r *http.Request) {
 	ws := newWSServer(w, r)
-	ws.WriteMessage(websocket.BinaryMessage, []byte(s.g.OnReady()))
-	ws.WriteMessage(websocket.BinaryMessage, []byte(s.g.OnLogin()))
-	ws.WriteMessage(websocket.BinaryMessage, []byte(s.g.OnTakeMachine()))
-	ws.WriteMessage(websocket.BinaryMessage, []byte(s.g.OnLoadInfo()))
-	ws.WriteMessage(websocket.BinaryMessage, []byte(s.g.OnGetMachineDetail()))
-	ws.WriteMessage(websocket.BinaryMessage, []byte(s.g.BeginGame()))
+	writeBinaryMsg(ws, s.g.OnReady())
 
 	for {
-		messageType, bytes, err := ws.ReadMessage()
+		_, bytes, err := ws.ReadMessage()
 		if err != nil {
 			log.Println("ReadMessage Error: ", err)
 			break
@@ -75,20 +68,34 @@ func (s *Server) gameHandler(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		b := &beginGameSchema{}
-		err = json.Unmarshal(bytes, b)
+		d := &wsData{}
+		err = json.Unmarshal(bytes, d)
 		if err != nil {
 			log.Println("Json Unmarshal Error: ", err)
-			continue
+			break
 		}
 
-		//  {"action":"beginGame4"}
-		if b.Action == "beginGame4" {
-			err = ws.WriteMessage(messageType, []byte(s.g.BeginGame()))
-			if err != nil {
-				log.Println("Write Error: ", err)
-				break
-			}
+		switch d.Action {
+		case "loginBySid":
+			writeBinaryMsg(ws, s.g.OnLogin())
+			writeBinaryMsg(ws, s.g.OnTakeMachine())
+		case "onLoadInfo2":
+			writeBinaryMsg(ws, s.g.OnLoadInfo())
+		case "getMachineDetail":
+			writeBinaryMsg(ws, s.g.OnGetMachineDetail())
+		case "beginGame4":
+			writeBinaryMsg(ws, s.g.BeginGame())
+		case "creditExchange":
+			writeBinaryMsg(ws, s.g.OnCreditExchange())
+		case "balanceExchange":
+			writeBinaryMsg(ws, s.g.OnBalanceExchange())
 		}
+	}
+}
+
+func writeBinaryMsg(ws *wsServer, msg string) {
+	err := ws.WriteMessage(websocket.BinaryMessage, []byte(msg))
+	if err != nil {
+		log.Println("Write Error: ", err)
 	}
 }

@@ -1,7 +1,6 @@
 package gode_test
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -58,9 +57,9 @@ func (s StubPhpGame) OnLogin() string {
 func TestWebSocketGame(t *testing.T) {
 	const timeOut = time.Second
 
-	t.Run("/ws/game receive and return in binary", func(t *testing.T) {
+	t.Run("/ws/game can process game", func(t *testing.T) {
 		stubGame := StubPhpGame{
-			ReadyMessage:            "OnReady",
+			ReadyMessage:            "ready",
 			LoginMessage:            "OnLogin",
 			LoadInfoMessage:         "OnLoadInfo",
 			TakeMachineMessage:      "OnTakeMachine",
@@ -69,31 +68,39 @@ func TestWebSocketGame(t *testing.T) {
 		}
 		server := httptest.NewServer(gode.NewServer(stubGame))
 		url := makeWebSocketURL(server, "/ws/game")
-		dialer := mustDialWS(t, url)
+		wsClient := mustDialWS(t, url)
 		defer server.Close()
 
 		within(t, timeOut, func() {
-			assertWSReceiveMessage(t, dialer, websocket.BinaryMessage, "OnReady")
-			assertWSReceiveMessage(t, dialer, websocket.BinaryMessage, "OnLogin")
-			assertWSReceiveMessage(t, dialer, websocket.BinaryMessage, "OnTakeMachine")
-			assertWSReceiveMessage(t, dialer, websocket.BinaryMessage, "OnLoadInfo")
-			assertWSReceiveMessage(t, dialer, websocket.BinaryMessage, "OnGetMachineDetail")
-		})
-		within(t, timeOut, func() {
-			dialer.WriteMessage(websocket.BinaryMessage, []byte(`{"action":"beginGame4"}`))
-			assertWSReceiveMessage(t, dialer, websocket.BinaryMessage, "OnBeginGame")
+			assertWSReceiveBinaryMsg(t, wsClient, "ready")
+			writeBinaryMsg(t, wsClient, `{"action":"loginBySid","sid":"21d9b36e42c8275a4359f6815b859df05ec2bb0a"}`)
+			assertWSReceiveBinaryMsg(t, wsClient, "OnLogin")
+			assertWSReceiveBinaryMsg(t, wsClient, "OnTakeMachine")
+			writeBinaryMsg(t, wsClient, `{"action":"onLoadInfo2","sid":"21d9b36e42c8275a4359f6815b859df05ec2bb0a"}`)
+			assertWSReceiveBinaryMsg(t, wsClient, "OnLoadInfo")
+			writeBinaryMsg(t, wsClient, `{"action":"getMachineDetail","sid":"21d9b36e42c8275a4359f6815b859df05ec2bb0a"}`)
+			assertWSReceiveBinaryMsg(t, wsClient, "OnGetMachineDetail")
+			writeBinaryMsg(t, wsClient, `{"action":"beginGame4"}`)
+			assertWSReceiveBinaryMsg(t, wsClient, "OnBeginGame")
 		})
 
-		err := dialer.Close()
+		err := wsClient.Close()
 		if err != nil {
 			t.Errorf("problem closing dialer %v", err)
 		}
 	})
 }
 
-func assertWSReceiveMessage(t *testing.T, dialer *websocket.Conn, expectedType int, want string) {
-	t.Helper()
+func writeBinaryMsg(t *testing.T, wsClient *websocket.Conn, msg string) {
+	err := wsClient.WriteMessage(websocket.BinaryMessage, []byte(msg))
+	if err != nil {
+		t.Error("ws WriteMessage Error", err)
+	}
+}
 
+func assertWSReceiveBinaryMsg(t *testing.T, dialer *websocket.Conn, want string) {
+	t.Helper()
+	const expectedType = websocket.BinaryMessage
 	mt, p, err := dialer.ReadMessage()
 	if err != nil {
 		t.Fatal("ReadMessageError", err)
