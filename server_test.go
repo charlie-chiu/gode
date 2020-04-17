@@ -12,7 +12,6 @@ import (
 )
 
 type StubPhpGame struct {
-	LoginMessage            []byte
 	LoadInfoMessage         []byte
 	TakeMachineMessage      []byte
 	GetMachineDetailMessage []byte
@@ -45,16 +44,11 @@ func (s StubPhpGame) OnGetMachineDetail() []byte {
 	return s.GetMachineDetailMessage
 }
 
-func (s StubPhpGame) OnLogin() []byte {
-	return s.LoginMessage
-}
-
 func TestWebSocketGame(t *testing.T) {
 	const timeOut = time.Second
 
 	t.Run("/ws/game can process game", func(t *testing.T) {
 		stubGame := StubPhpGame{
-			LoginMessage:            []byte("OnLogin"),
 			LoadInfoMessage:         []byte("OnLoadInfo"),
 			TakeMachineMessage:      []byte("OnTakeMachine"),
 			GetMachineDetailMessage: []byte("OnGetMachineDetail"),
@@ -68,7 +62,7 @@ func TestWebSocketGame(t *testing.T) {
 		within(t, timeOut, func() {
 			assertWSReceiveBinaryMsg(t, wsClient, `{"action":"ready","result":{"event":true,"data":null}}`)
 			writeBinaryMsg(t, wsClient, `{"action":"loginBySid","sid":"21d9b36e42c8275a4359f6815b859df05ec2bb0a"}`)
-			assertWSReceiveBinaryMsg(t, wsClient, "OnLogin")
+			assertWSReceiveBinaryMsg(t, wsClient, `{"action":"onLogin","result":{"event":true,"data":{"COID":2688,"ExchangeRate":1,"GameID":0,"HallID":6,"Sid":"","Test":1,"UserID":0}}}`)
 			assertWSReceiveBinaryMsg(t, wsClient, "OnTakeMachine")
 			writeBinaryMsg(t, wsClient, `{"action":"onLoadInfo2","sid":"21d9b36e42c8275a4359f6815b859df05ec2bb0a"}`)
 			assertWSReceiveBinaryMsg(t, wsClient, "OnLoadInfo")

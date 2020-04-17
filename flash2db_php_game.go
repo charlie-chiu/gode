@@ -1,10 +1,5 @@
 package gode
 
-import (
-	"encoding/json"
-	"log"
-)
-
 const PathPrefix = "/amfphp/json.php"
 const Path5145 = "/casino.slot.line243.BuBuGaoSheng."
 
@@ -22,30 +17,6 @@ func NewFlash2dbPhpGame(gameType GameType) *Flash2dbPhpGame {
 	return &Flash2dbPhpGame{
 		GameType: gameType,
 	}
-}
-
-func (Flash2dbPhpGame) OnLogin(sid SessionID) []byte {
-	data := &response{
-		Action: "onLogin",
-		Result: result{
-			Event: true,
-			Data: map[string]interface{}{
-				"COID":         2688,
-				"ExchangeRate": 1,
-				"GameID":       0,
-				"HallID":       6,
-				"Sid":          sid,
-				"Test":         1,
-				"UserID":       0,
-			},
-		},
-	}
-	result, err := json.Marshal(data)
-	if err != nil {
-		log.Fatal("JSON Marshal Error", err)
-	}
-
-	return result
 }
 
 func (Flash2dbPhpGame) OnTakeMachine() []byte {

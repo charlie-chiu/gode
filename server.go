@@ -90,6 +90,8 @@ func (s *Server) readMessage(ws *wsServer, wsMsg chan []byte) {
 }
 
 func (s *Server) handleMessage(ws *wsServer, msg []byte) {
+	// todo: 應該寫成獨立的handler 之類的，之後再視需求修改
+	const msgOnLogin = `{"action":"onLogin","result":{"event":true,"data":{"COID":2688,"ExchangeRate":1,"GameID":0,"HallID":6,"Sid":"","Test":1,"UserID":0}}}`
 	data := &wsData{}
 	err := json.Unmarshal(msg, data)
 	if err != nil {
@@ -98,7 +100,7 @@ func (s *Server) handleMessage(ws *wsServer, msg []byte) {
 
 	switch data.Action {
 	case login:
-		s.writeBinaryMsg(ws, s.g.OnLogin())
+		s.writeBinaryMsg(ws, []byte(msgOnLogin))
 		s.writeBinaryMsg(ws, s.g.OnTakeMachine())
 	case onLoadInfo:
 		s.writeBinaryMsg(ws, s.g.OnLoadInfo())

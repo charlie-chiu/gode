@@ -1,9 +1,8 @@
 package gode
 
 type Game interface {
-	OnLogin() []byte
+	// 對應 php 核心的API
 
-	// ↓ 對應到 php 核心
 	//machineOccupyAuto($_iUserID)
 	OnTakeMachine() []byte
 
