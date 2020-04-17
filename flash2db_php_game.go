@@ -1,6 +1,7 @@
 package gode
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -18,7 +19,7 @@ func NewFlash2dbPhpGame(host string, gameType GameType) *Flash2dbPhpGame {
 		5145: Path5145,
 	}
 
-	url := host + PathPrefix + path[5145]
+	url := host + PathPrefix + path[gameType]
 
 	return &Flash2dbPhpGame{
 		url: url,
@@ -26,7 +27,8 @@ func NewFlash2dbPhpGame(host string, gameType GameType) *Flash2dbPhpGame {
 }
 
 func (g *Flash2dbPhpGame) OnTakeMachine() []byte {
-	response, err := http.Get(g.url)
+	url := fmt.Sprintf("%smachineOccupyAuto/%d", g.url, 362907402)
+	response, err := http.Get(url)
 	if err != nil {
 		log.Fatal("http Get Error", err)
 	}
