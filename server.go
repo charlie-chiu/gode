@@ -57,7 +57,8 @@ type wsData struct {
 func (s *Server) gameHandler(w http.ResponseWriter, r *http.Request) {
 	ws := newWSServer(w, r)
 	//tell client we are ready to handle msg
-	s.writeBinaryMsg(ws, s.g.OnReady())
+	const msgOnReady = `{"action":"ready","result":{"event":true,"data":null}}`
+	s.writeBinaryMsg(ws, []byte(msgOnReady))
 
 	wsMsg := make(chan []byte)
 	go s.readMessage(ws, wsMsg)

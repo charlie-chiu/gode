@@ -1,7 +1,6 @@
 package gode
 
 type Game interface {
-	OnReady() []byte
 	OnLogin() []byte
 
 	// ↓ 對應到 php 核心

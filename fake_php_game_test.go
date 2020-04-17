@@ -8,21 +8,6 @@ import (
 )
 
 func TestFakePhpGame(t *testing.T) {
-	t.Run("onReady", func(t *testing.T) {
-		game := &FakePhpGame{}
-		want := &response{
-			Action: "ready",
-			Result: result{
-				Event: true,
-				//Data:  ???,
-			},
-		}
-		got := &response{}
-
-		unmarshalJSON(t, game.OnReady(), got)
-		assertJSONEqual(t, want, got)
-	})
-
 	t.Run("onLogin", func(t *testing.T) {
 		game := &FakePhpGame{}
 		want := &response{

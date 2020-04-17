@@ -12,7 +12,6 @@ import (
 )
 
 type StubPhpGame struct {
-	ReadyMessage            []byte
 	LoginMessage            []byte
 	LoadInfoMessage         []byte
 	TakeMachineMessage      []byte
@@ -32,10 +31,6 @@ func (s StubPhpGame) OnBalanceExchange() []byte {
 
 func (s StubPhpGame) BeginGame() []byte {
 	return s.BeginGameMessage
-}
-
-func (s StubPhpGame) OnReady() []byte {
-	return s.ReadyMessage
 }
 
 func (s StubPhpGame) OnTakeMachine() []byte {
@@ -59,7 +54,6 @@ func TestWebSocketGame(t *testing.T) {
 
 	t.Run("/ws/game can process game", func(t *testing.T) {
 		stubGame := StubPhpGame{
-			ReadyMessage:            []byte("ready"),
 			LoginMessage:            []byte("OnLogin"),
 			LoadInfoMessage:         []byte("OnLoadInfo"),
 			TakeMachineMessage:      []byte("OnTakeMachine"),
@@ -72,7 +66,7 @@ func TestWebSocketGame(t *testing.T) {
 		defer server.Close()
 
 		within(t, timeOut, func() {
-			assertWSReceiveBinaryMsg(t, wsClient, "ready")
+			assertWSReceiveBinaryMsg(t, wsClient, `{"action":"ready","result":{"event":true,"data":null}}`)
 			writeBinaryMsg(t, wsClient, `{"action":"loginBySid","sid":"21d9b36e42c8275a4359f6815b859df05ec2bb0a"}`)
 			assertWSReceiveBinaryMsg(t, wsClient, "OnLogin")
 			assertWSReceiveBinaryMsg(t, wsClient, "OnTakeMachine")

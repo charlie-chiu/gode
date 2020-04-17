@@ -24,22 +24,6 @@ func NewFlash2dbPhpGame(gameType GameType) *Flash2dbPhpGame {
 	}
 }
 
-func (Flash2dbPhpGame) OnReady() []byte {
-	data := &response{
-		Action: "ready",
-		Result: result{
-			Event: true,
-			Data:  nil,
-		},
-	}
-	result, err := json.Marshal(data)
-	if err != nil {
-		log.Fatal("JSON Marshal Error", err)
-	}
-
-	return result
-}
-
 func (Flash2dbPhpGame) OnLogin(sid SessionID) []byte {
 	data := &response{
 		Action: "onLogin",

@@ -18,19 +18,6 @@ type result struct {
 	Data  map[string]interface{} `json:"data"`
 }
 
-func (g FakePhpGame) OnReady() []byte {
-	r := &response{
-		Action: "ready",
-		Result: result{
-			Event: true,
-			Data:  nil,
-		},
-	}
-	bytes, _ := json.Marshal(r)
-
-	return bytes
-}
-
 func (g FakePhpGame) OnLogin() []byte {
 	r := &response{
 		Action: "onLogin",

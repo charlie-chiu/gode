@@ -6,18 +6,6 @@ import (
 
 func TestFlash2dbPhpGame(t *testing.T) {
 	game := NewFlash2dbPhpGame(5145)
-	t.Run("OnReady", func(t *testing.T) {
-		want := &response{
-			Action: "ready",
-			Result: result{
-				Event: true,
-			},
-		}
-		got := &response{}
-
-		unmarshalJSON(t, game.OnReady(), got)
-		assertJSONEqual(t, want, got)
-	})
 
 	t.Run("OnLogin", func(t *testing.T) {
 		var sid SessionID = "21d9b36e42c8275a4359f6815b859df05ec2bb0a"
