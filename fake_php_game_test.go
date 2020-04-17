@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"reflect"
 	"testing"
 )
 
@@ -143,18 +142,21 @@ func TestFakePhpGame_BeginGame(t *testing.T) {
 }
 
 func assertJSONEqual(t *testing.T, want *response, got *response) {
-	// json.unmarshal will store float64 for JSON numbers
-	// see https://golang.org/pkg/encoding/json/#Unmarshal for more
-	for k, v := range want.Result.Data {
-		if reflect.TypeOf(v).Kind() == reflect.Int {
-			want.Result.Data[k] = float64(v.(int))
-		}
+	t.Helper()
+
+	gotByte, err := json.Marshal(got)
+	if err != nil {
+		t.Fatal("JSON Marshal(got) Error", err)
 	}
 
-	t.Helper()
-	if !reflect.DeepEqual(want, got) {
-		fmt.Printf("want: %#v \n", want)
-		fmt.Printf(" got: %#v \n", got)
+	wantByte, err := json.Marshal(want)
+	if err != nil {
+		t.Error("JSON Marshal(want) Error", err)
+	}
+
+	if bytes.Compare(gotByte, wantByte) != 0 {
+		fmt.Printf("want: %s \n", wantByte)
+		fmt.Printf(" got: %s \n", gotByte)
 		t.Errorf("not matched")
 	}
 }
