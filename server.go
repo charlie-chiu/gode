@@ -23,17 +23,6 @@ const (
 	balanceExchange  = "balanceExchange"
 )
 
-type Game interface {
-	OnReady() []byte
-	OnLogin() []byte
-	OnTakeMachine() []byte
-	OnLoadInfo() []byte
-	OnGetMachineDetail() []byte
-	BeginGame() []byte
-	OnCreditExchange() []byte
-	OnBalanceExchange() []byte
-}
-
 func NewServer(g Game) *Server {
 	server := new(Server)
 	server.g = g

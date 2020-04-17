@@ -5,12 +5,6 @@ import (
 	"log"
 )
 
-type (
-	SessionID string
-	GameType  int
-	UserID    int
-)
-
 const PathPrefix = "/amfphp/json.php"
 const Path5145 = "/casino.slot.line243.BuBuGaoSheng."
 
