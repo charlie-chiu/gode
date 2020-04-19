@@ -5,10 +5,16 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 )
 
 const PathPrefix = "/amfphp/json.php"
 const Path5145 = "/casino.slot.line243.BuBuGaoSheng."
+
+const (
+	MachineOccupyAuto = "machineOccupyAuto"
+	OnLoadInfo        = "onLoadInfo"
+)
 
 type Flash2dbPhpGame struct {
 	url string
@@ -31,37 +37,15 @@ func NewFlash2dbPhpGame(host string, gameType GameType) (*Flash2dbPhpGame, error
 }
 
 func (g *Flash2dbPhpGame) OnTakeMachine(id UserID) []byte {
-	phpFunctionName := "machineOccupyAuto"
-	url := fmt.Sprintf("%s%s/%d", g.url, phpFunctionName, id)
-	response, err := http.Get(url)
-	if err != nil {
-		log.Fatal("http Get Error", err)
-	}
-	defer response.Body.Close()
+	url := g.generateURL(MachineOccupyAuto, id)
 
-	bytes, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		log.Print("ioutil ReadAll error : ", err)
-	}
-
-	return bytes
+	return g.call(url)
 }
 
 func (g *Flash2dbPhpGame) OnLoadInfo(id UserID, gc GameCode) []byte {
-	phpFunctionName := "onLoadInfo"
-	url := fmt.Sprintf("%s%s/%d/%d", g.url, phpFunctionName, id, gc)
-	response, err := http.Get(url)
-	if err != nil {
-		log.Fatal("http Get Error", err)
-	}
-	defer response.Body.Close()
+	url := g.generateURL(OnLoadInfo, id, gc)
 
-	bytes, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		log.Print("ioutil ReadAll error : ", err)
-	}
-
-	return bytes
+	return g.call(url)
 }
 
 func (Flash2dbPhpGame) OnGetMachineDetail() []byte {
@@ -78,4 +62,30 @@ func (Flash2dbPhpGame) OnCreditExchange() []byte {
 
 func (Flash2dbPhpGame) OnBalanceExchange() []byte {
 	panic("implement me")
+}
+
+func (g *Flash2dbPhpGame) call(url string) []byte {
+	response, err := http.Get(url)
+	if err != nil {
+		log.Fatal("http Get Error", err)
+	}
+	defer response.Body.Close()
+
+	bytes, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		log.Print("ioutil ReadAll error : ", err)
+	}
+	return bytes
+}
+
+func (g *Flash2dbPhpGame) generateURL(phpFunctionName string, param ...interface{}) string {
+	b := strings.Builder{}
+
+	b.WriteString(fmt.Sprintf("%s%s", g.url, phpFunctionName))
+
+	for _, p := range param {
+		b.WriteString(fmt.Sprintf("/%d", p))
+	}
+
+	return b.String()
 }

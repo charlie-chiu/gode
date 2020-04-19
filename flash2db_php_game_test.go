@@ -16,27 +16,30 @@ func TestFlash2dbPhpGame(t *testing.T) {
 
 	t.Run("OnTakeMachine get correct url and return result", func(t *testing.T) {
 		var userID UserID = 362907402
-		gamePath := "/casino.slot.line243.BuBuGaoSheng.machineOccupyAuto/"
-		expectedURL := fmt.Sprintf("/amfphp/json.php%s%d", gamePath, userID)
+		gamePath := "/casino.slot.line243.BuBuGaoSheng."
+		phpFunctionName := "machineOccupyAuto"
+		expectedURL := fmt.Sprintf("%s%s%s/%d", PathPrefix, gamePath, phpFunctionName, userID)
 
-		srv := NewTestingServer(t, expectedURL, `help`)
+		srv := NewTestingServer(t, expectedURL, `{OnTakeMachine}`)
 		defer srv.Close()
 
 		g, err := NewFlash2dbPhpGame(srv.URL, 5145)
 
 		assertNoError(t, err)
 
-		want := []byte(`help`)
+		want := []byte(`{OnTakeMachine}`)
 		got := g.OnTakeMachine(userID)
 		assertByteEqual(t, got, want)
 	})
 
 	t.Run("onLoadInfo get correct url and return result", func(t *testing.T) {
+
 		var userID UserID = 362907402
 		var gameCode GameCode = 1
-		gamePath := "/casino.slot.line243.BuBuGaoSheng.onLoadInfo/"
-		expectedURL := fmt.Sprintf("/amfphp/json.php%s%d/%d", gamePath, userID, gameCode)
-		fmt.Println(expectedURL)
+		gamePath := "/casino.slot.line243.BuBuGaoSheng."
+		phpFunctionName := "onLoadInfo"
+		expectedURL := fmt.Sprintf("%s%s%s/%d/%d", PathPrefix, gamePath, phpFunctionName, userID, gameCode)
+
 		srv := NewTestingServer(t, expectedURL, `onLoadInfo`)
 		defer srv.Close()
 
