@@ -47,8 +47,21 @@ func (g *Flash2dbPhpGame) OnTakeMachine(id UserID) []byte {
 	return bytes
 }
 
-func (Flash2dbPhpGame) OnLoadInfo() []byte {
-	panic("implement me")
+func (g *Flash2dbPhpGame) OnLoadInfo(id UserID, gc GameCode) []byte {
+	phpFunctionName := "onLoadInfo"
+	url := fmt.Sprintf("%s%s/%d/%d", g.url, phpFunctionName, id, gc)
+	response, err := http.Get(url)
+	if err != nil {
+		log.Fatal("http Get Error", err)
+	}
+	defer response.Body.Close()
+
+	bytes, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		log.Print("ioutil ReadAll error : ", err)
+	}
+
+	return bytes
 }
 
 func (Flash2dbPhpGame) OnGetMachineDetail() []byte {
