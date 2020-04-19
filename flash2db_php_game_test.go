@@ -15,12 +15,11 @@ func TestFlash2dbPhpGame(t *testing.T) {
 	})
 
 	t.Run("OnTakeMachine get correct url and return result", func(t *testing.T) {
-		const wantedURL = "/amfphp/json.php/casino.slot.line243.BuBuGaoSheng.machineOccupyAuto/362907402"
-		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			assertURLEqual(t, r, wantedURL)
-			fmt.Fprint(w, `help`)
-		})
-		srv := httptest.NewServer(handler)
+		var userID UserID = 362907402
+		gamePath := "/casino.slot.line243.BuBuGaoSheng.machineOccupyAuto/"
+		expectedURL := fmt.Sprintf("/amfphp/json.php%s%d", gamePath, userID)
+
+		srv := NewTestingServer(t, expectedURL, `help`)
 		defer srv.Close()
 
 		g, err := NewFlash2dbPhpGame(srv.URL, 5145)
@@ -32,6 +31,14 @@ func TestFlash2dbPhpGame(t *testing.T) {
 		assertByteEqual(t, got, want)
 	})
 
+}
+
+func NewTestingServer(t *testing.T, expectedURL string, response string) *httptest.Server {
+	t.Helper()
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assertURLEqual(t, r, expectedURL)
+		fmt.Fprint(w, response)
+	}))
 }
 
 func assertError(t *testing.T, err error) {
