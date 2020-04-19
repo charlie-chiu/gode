@@ -27,7 +27,7 @@ func TestFlash2dbPhpGame(t *testing.T) {
 		assertNoError(t, err)
 
 		want := []byte(`help`)
-		got := g.OnTakeMachine()
+		got := g.OnTakeMachine(userID)
 		assertByteEqual(t, got, want)
 	})
 

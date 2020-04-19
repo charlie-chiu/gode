@@ -30,8 +30,9 @@ func NewFlash2dbPhpGame(host string, gameType GameType) (*Flash2dbPhpGame, error
 	}, nil
 }
 
-func (g *Flash2dbPhpGame) OnTakeMachine() []byte {
-	url := fmt.Sprintf("%smachineOccupyAuto/%d", g.url, 362907402)
+func (g *Flash2dbPhpGame) OnTakeMachine(id UserID) []byte {
+	phpFunctionName := "machineOccupyAuto"
+	url := fmt.Sprintf("%s%s/%d", g.url, phpFunctionName, id)
 	response, err := http.Get(url)
 	if err != nil {
 		log.Fatal("http Get Error", err)
