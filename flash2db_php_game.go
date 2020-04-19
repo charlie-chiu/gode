@@ -14,16 +14,20 @@ type Flash2dbPhpGame struct {
 	url string
 }
 
-func NewFlash2dbPhpGame(host string, gameType GameType) *Flash2dbPhpGame {
+func NewFlash2dbPhpGame(host string, gameType GameType) (*Flash2dbPhpGame, error) {
 	path := map[GameType]string{
 		5145: Path5145,
 	}
 
-	url := host + PathPrefix + path[gameType]
+	gamePath, ok := path[gameType]
+	if !ok {
+		return nil, fmt.Errorf("game %d not define", gameType)
+	}
+	url := host + PathPrefix + gamePath
 
 	return &Flash2dbPhpGame{
 		url: url,
-	}
+	}, nil
 }
 
 func (g *Flash2dbPhpGame) OnTakeMachine() []byte {
