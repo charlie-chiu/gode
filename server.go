@@ -5,8 +5,6 @@ import (
 	"html/template"
 	"log"
 	"net/http"
-
-	"github.com/gorilla/websocket"
 )
 
 type Server struct {
@@ -54,7 +52,7 @@ func (s *Server) gameHandler(w http.ResponseWriter, r *http.Request) {
 	ws := newWSServer(w, r)
 	//tell client we are ready to handle msg
 	const msgOnReady = `{"action":"ready","result":{"event":true,"data":null}}`
-	s.writeBinaryMsg(ws, []byte(msgOnReady))
+	ws.writeBinaryMsg(ws, []byte(msgOnReady))
 
 	wsMsg := make(chan []byte)
 	go s.readMessage(ws, wsMsg)
@@ -115,24 +113,24 @@ func (s *Server) handleMessage(ws *wsServer, msg []byte) {
 
 	switch data.Action {
 	case login:
-		s.writeBinaryMsg(ws, []byte(msgOnLogin))
+		ws.writeBinaryMsg(ws, []byte(msgOnLogin))
 		msg := s.makeSendJSON("onTakeMachine", s.g.OnTakeMachine(uid))
-		s.writeBinaryMsg(ws, msg)
+		ws.writeBinaryMsg(ws, msg)
 	case onLoadInfo:
 		msg := s.makeSendJSON("onOnLoadInfo2", s.g.OnLoadInfo(uid, gameCode))
-		s.writeBinaryMsg(ws, msg)
+		ws.writeBinaryMsg(ws, msg)
 	case getMachineDetail:
 		msg := s.makeSendJSON("onGetMachineDetail", s.g.OnGetMachineDetail(uid, gameCode))
-		s.writeBinaryMsg(ws, msg)
+		ws.writeBinaryMsg(ws, msg)
 	case beginGame:
 		msg := s.makeSendJSON("onBeginGame", s.g.BeginGame(sid, gameCode, bet))
-		s.writeBinaryMsg(ws, msg)
+		ws.writeBinaryMsg(ws, msg)
 	case creditExchange:
 		msg := s.makeSendJSON("onCreditExchange", s.g.OnCreditExchange(sid, gameCode, betBase, credit))
-		s.writeBinaryMsg(ws, msg)
+		ws.writeBinaryMsg(ws, msg)
 	case balanceExchange:
 		msg := s.makeSendJSON("onBalanceExchange", s.g.OnBalanceExchange(uid, hid, gameCode))
-		s.writeBinaryMsg(ws, msg)
+		ws.writeBinaryMsg(ws, msg)
 	}
 }
 
@@ -145,11 +143,4 @@ func (s *Server) makeSendJSON(action string, APIResult []byte) []byte {
 		log.Print("Problem marshal JSON", err)
 	}
 	return msg
-}
-
-func (s *Server) writeBinaryMsg(ws *wsServer, msg []byte) {
-	err := ws.WriteMessage(websocket.BinaryMessage, msg)
-	if err != nil {
-		log.Println("Write Error: ", err)
-	}
 }

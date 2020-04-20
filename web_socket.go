@@ -46,3 +46,10 @@ func (w *wsServer) write(p []byte) (n int, err error) {
 
 	return len(p), nil
 }
+
+func (w *wsServer) writeBinaryMsg(ws *wsServer, msg []byte) {
+	err := ws.WriteMessage(websocket.BinaryMessage, msg)
+	if err != nil {
+		log.Println("Write Error: ", err)
+	}
+}
