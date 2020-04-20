@@ -58,6 +58,9 @@ func TestWebSocketGame(t *testing.T) {
 			TakeMachineMessage:      []byte("OnTakeMachine"),
 			GetMachineDetailMessage: []byte("OnGetMachineDetail"),
 			BeginGameMessage:        []byte("OnBeginGame"),
+			BalanceExchangeMsg:      []byte("balance"),
+			CreditExchangeMsg:       []byte("credit"),
+			LeaveMachineMessage:     []byte("leave"),
 		}
 		server := httptest.NewServer(gode.NewServer(stubGame))
 		url := makeWebSocketURL(server, "/ws/game")
@@ -65,16 +68,33 @@ func TestWebSocketGame(t *testing.T) {
 		defer server.Close()
 
 		within(t, timeOut, func() {
+			//ready
 			assertWSReceiveBinaryMsg(t, wsClient, `{"action":"ready","result":{"event":true,"data":null}}`)
+
+			//login
 			writeBinaryMsg(t, wsClient, `{"action":"loginBySid","sid":"21d9b36e42c8275a4359f6815b859df05ec2bb0a"}`)
 			assertWSReceiveBinaryMsg(t, wsClient, `{"action":"onLogin","result":{"event":true,"data":{"COID":2688,"ExchangeRate":1,"GameID":0,"HallID":6,"Sid":"","Test":1,"UserID":0}}}`)
-			assertWSReceiveBinaryMsg(t, wsClient, "OnTakeMachine")
+			assertWSReceiveBinaryMsg(t, wsClient, `{"action":"onTakeMachine","result":"OnTakeMachine"}`)
+
+			//onLoadInfo
 			writeBinaryMsg(t, wsClient, `{"action":"onLoadInfo2","sid":"21d9b36e42c8275a4359f6815b859df05ec2bb0a"}`)
-			assertWSReceiveBinaryMsg(t, wsClient, "OnLoadInfo")
+			assertWSReceiveBinaryMsg(t, wsClient, `{"action":"onOnLoadInfo2","result":"OnLoadInfo"}`)
+
+			//getMachineDetail
 			writeBinaryMsg(t, wsClient, `{"action":"getMachineDetail","sid":"21d9b36e42c8275a4359f6815b859df05ec2bb0a"}`)
-			assertWSReceiveBinaryMsg(t, wsClient, "OnGetMachineDetail")
+			assertWSReceiveBinaryMsg(t, wsClient, `{"action":"onGetMachineDetail","result":"OnGetMachineDetail"}`)
+
+			//開分
+			writeBinaryMsg(t, wsClient, `{"action":"creditExchange"}`)
+			assertWSReceiveBinaryMsg(t, wsClient, `{"action":"onCreditExchange","result":"credit"}`)
+
+			//begin game
 			writeBinaryMsg(t, wsClient, `{"action":"beginGame4"}`)
-			assertWSReceiveBinaryMsg(t, wsClient, "OnBeginGame")
+			assertWSReceiveBinaryMsg(t, wsClient, `{"action":"onBeginGame","result":"OnBeginGame"}`)
+
+			//洗分
+			writeBinaryMsg(t, wsClient, `{"action":"balanceExchange"}`)
+			assertWSReceiveBinaryMsg(t, wsClient, `{"action":"onBalanceExchange","result":"balance"}`)
 		})
 
 		err := wsClient.Close()
@@ -103,7 +123,7 @@ func assertWSReceiveBinaryMsg(t *testing.T, dialer *websocket.Conn, want string)
 	}
 	got := string(p)
 	if got != want {
-		t.Errorf("expected message %q from web socket, got %q", want, got)
+		t.Errorf("message from web socket not matched\nwant %q\n got %q", want, got)
 	}
 }
 

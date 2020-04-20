@@ -50,10 +50,6 @@ func (s *Server) demoPageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-type wsData struct {
-	Action string `json:"action"`
-}
-
 func (s *Server) gameHandler(w http.ResponseWriter, r *http.Request) {
 	ws := newWSServer(w, r)
 	//tell client we are ready to handle msg
@@ -69,6 +65,15 @@ func (s *Server) gameHandler(w http.ResponseWriter, r *http.Request) {
 			s.handleMessage(ws, msg)
 		}
 	}
+}
+
+type wsDataReceive struct {
+	Action string `json:"action"`
+}
+
+type wsDataSend struct {
+	Action string          `json:"action"`
+	Result json.RawMessage `json:"result"`
 }
 
 func (s *Server) readMessage(ws *wsServer, wsMsg chan []byte) {
@@ -92,17 +97,17 @@ func (s *Server) readMessage(ws *wsServer, wsMsg chan []byte) {
 func (s *Server) handleMessage(ws *wsServer, msg []byte) {
 	// todo: 應該寫成獨立的handler 之類的，之後再視需求修改
 	const msgOnLogin = `{"action":"onLogin","result":{"event":true,"data":{"COID":2688,"ExchangeRate":1,"GameID":0,"HallID":6,"Sid":"","Test":1,"UserID":0}}}`
-	data := &wsData{}
+	data := &wsDataReceive{}
 	err := json.Unmarshal(msg, data)
 	if err != nil {
 		log.Println("Json Unmarshal Error: ", err)
 	}
 
 	var (
-		sid      SessionID = ""
+		sid      SessionID = "b285306cc11c53d9877791427f892d87354bb8a8"
 		uid      UserID    = 455648515
 		hid      HallID    = 6
-		gameCode GameCode  = 0
+		gameCode GameCode  = 95
 		bet      string    = `{"BetLevel":1}`
 		betBase  string    = "1:1"
 		credit   int       = 1000
@@ -111,18 +116,35 @@ func (s *Server) handleMessage(ws *wsServer, msg []byte) {
 	switch data.Action {
 	case login:
 		s.writeBinaryMsg(ws, []byte(msgOnLogin))
-		s.writeBinaryMsg(ws, s.g.OnTakeMachine(uid))
+		msg := s.makeSendJSON("onTakeMachine", s.g.OnTakeMachine(uid))
+		s.writeBinaryMsg(ws, msg)
 	case onLoadInfo:
-		s.writeBinaryMsg(ws, s.g.OnLoadInfo(uid, gameCode))
+		msg := s.makeSendJSON("onOnLoadInfo2", s.g.OnLoadInfo(uid, gameCode))
+		s.writeBinaryMsg(ws, msg)
 	case getMachineDetail:
-		s.writeBinaryMsg(ws, s.g.OnGetMachineDetail(uid, gameCode))
+		msg := s.makeSendJSON("onGetMachineDetail", s.g.OnGetMachineDetail(uid, gameCode))
+		s.writeBinaryMsg(ws, msg)
 	case beginGame:
-		s.writeBinaryMsg(ws, s.g.BeginGame(sid, gameCode, bet))
+		msg := s.makeSendJSON("onBeginGame", s.g.BeginGame(sid, gameCode, bet))
+		s.writeBinaryMsg(ws, msg)
 	case creditExchange:
-		s.writeBinaryMsg(ws, s.g.OnCreditExchange(sid, gameCode, betBase, credit))
+		msg := s.makeSendJSON("onCreditExchange", s.g.OnCreditExchange(sid, gameCode, betBase, credit))
+		s.writeBinaryMsg(ws, msg)
 	case balanceExchange:
-		s.writeBinaryMsg(ws, s.g.OnBalanceExchange(uid, hid, gameCode))
+		msg := s.makeSendJSON("onBalanceExchange", s.g.OnBalanceExchange(uid, hid, gameCode))
+		s.writeBinaryMsg(ws, msg)
 	}
+}
+
+func (s *Server) makeSendJSON(action string, APIResult []byte) []byte {
+	msg, err := json.Marshal(&wsDataSend{
+		Action: action,
+		Result: APIResult,
+	})
+	if err != nil {
+		log.Print("Problem marshal JSON", err)
+	}
+	return msg
 }
 
 func (s *Server) writeBinaryMsg(ws *wsServer, msg []byte) {
