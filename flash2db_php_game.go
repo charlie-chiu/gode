@@ -1,6 +1,7 @@
 package gode
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -41,49 +42,49 @@ func NewFlash2dbPhpGame(host string, gameType GameType) (*Flash2dbPhpGame, error
 	}, nil
 }
 
-func (g *Flash2dbPhpGame) OnTakeMachine(id UserID) []byte {
+func (g *Flash2dbPhpGame) OnTakeMachine(id UserID) json.RawMessage {
 	url := g.generateURL(MachineOccupyAuto, id)
 
 	return g.call(url)
 }
 
-func (g *Flash2dbPhpGame) OnLoadInfo(id UserID, gc GameCode) []byte {
+func (g *Flash2dbPhpGame) OnLoadInfo(id UserID, gc GameCode) json.RawMessage {
 	url := g.generateURL(OnLoadInfo, id, gc)
 
 	return g.call(url)
 }
 
-func (g *Flash2dbPhpGame) OnGetMachineDetail(id UserID, gc GameCode) []byte {
+func (g *Flash2dbPhpGame) OnGetMachineDetail(id UserID, gc GameCode) json.RawMessage {
 	url := g.generateURL(GetMachineDetail, id, gc)
 
 	return g.call(url)
 }
 
-func (g *Flash2dbPhpGame) BeginGame(sid SessionID, gameCode GameCode, betInfo string) []byte {
+func (g *Flash2dbPhpGame) BeginGame(sid SessionID, gameCode GameCode, betInfo string) json.RawMessage {
 	u := g.generateURL(BeginGame, sid, gameCode, betInfo)
 
 	return g.call(u)
 }
 
-func (g *Flash2dbPhpGame) OnCreditExchange(id SessionID, code GameCode, betBase string, credit int) []byte {
+func (g *Flash2dbPhpGame) OnCreditExchange(id SessionID, code GameCode, betBase string, credit int) json.RawMessage {
 	url := g.generateURL(CreditExchange, id, code, betBase, credit)
 
 	return g.call(url)
 }
 
-func (g *Flash2dbPhpGame) OnBalanceExchange(uid UserID, hid HallID, code GameCode) []byte {
+func (g *Flash2dbPhpGame) OnBalanceExchange(uid UserID, hid HallID, code GameCode) json.RawMessage {
 	url := g.generateURL(BalanceExchange, uid, hid, code)
 
 	return g.call(url)
 }
 
-func (g *Flash2dbPhpGame) OnLeaveMachine(uid UserID, hid HallID, gameCode GameCode) []byte {
+func (g *Flash2dbPhpGame) OnLeaveMachine(uid UserID, hid HallID, gameCode GameCode) json.RawMessage {
 	url := g.generateURL(MachineLeave, uid, hid, gameCode)
 
 	return g.call(url)
 }
 
-func (g *Flash2dbPhpGame) call(url string) []byte {
+func (g *Flash2dbPhpGame) call(url string) json.RawMessage {
 	response, err := http.Get(url)
 	if err != nil {
 		log.Fatal("http Get Error", err)
