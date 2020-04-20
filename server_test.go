@@ -12,41 +12,41 @@ import (
 )
 
 type StubPhpGame struct {
-	LoadInfoMessage         []byte
-	TakeMachineMessage      []byte
-	GetMachineDetailMessage []byte
-	BeginGameMessage        []byte
-	BalanceExchangeMsg      []byte
-	CreditExchangeMsg       []byte
-	LeaveMachineMessage     []byte
+	LoadInfoResult         string
+	TakeMachineResult      string
+	GetMachineDetailResult string
+	BeginGameResult        string
+	BalanceExchangeResult  string
+	CreditExchangeResult   string
+	LeaveMachineResult     string
 }
 
 func (s StubPhpGame) OnTakeMachine(uid gode.UserID) []byte {
-	return s.TakeMachineMessage
+	return []byte(s.TakeMachineResult)
 }
 
 func (s StubPhpGame) OnLoadInfo(uid gode.UserID, gc gode.GameCode) []byte {
-	return s.LoadInfoMessage
+	return []byte(s.LoadInfoResult)
 }
 
 func (s StubPhpGame) OnGetMachineDetail(uid gode.UserID, gc gode.GameCode) []byte {
-	return s.GetMachineDetailMessage
+	return []byte(s.GetMachineDetailResult)
 }
 
 func (s StubPhpGame) OnCreditExchange(sid gode.SessionID, gc gode.GameCode, bb string, credit int) []byte {
-	return s.CreditExchangeMsg
+	return []byte(s.CreditExchangeResult)
 }
 
 func (s StubPhpGame) OnBalanceExchange(uid gode.UserID, hid gode.HallID, gc gode.GameCode) []byte {
-	return s.BalanceExchangeMsg
+	return []byte(s.BalanceExchangeResult)
 }
 
 func (s StubPhpGame) BeginGame(sid gode.SessionID, gc gode.GameCode, betInfo string) []byte {
-	return s.BeginGameMessage
+	return []byte(s.BeginGameResult)
 }
 
 func (s StubPhpGame) OnLeaveMachine(uid gode.UserID, hid gode.HallID, gameCode gode.GameCode) []byte {
-	return s.LeaveMachineMessage
+	return []byte(s.LeaveMachineResult)
 }
 
 func TestWebSocketGame(t *testing.T) {
@@ -54,13 +54,13 @@ func TestWebSocketGame(t *testing.T) {
 
 	t.Run("/ws/game can process game", func(t *testing.T) {
 		stubGame := StubPhpGame{
-			LoadInfoMessage:         []byte("OnLoadInfo"),
-			TakeMachineMessage:      []byte("OnTakeMachine"),
-			GetMachineDetailMessage: []byte("OnGetMachineDetail"),
-			BeginGameMessage:        []byte("OnBeginGame"),
-			BalanceExchangeMsg:      []byte("balance"),
-			CreditExchangeMsg:       []byte("credit"),
-			LeaveMachineMessage:     []byte("leave"),
+			LoadInfoResult:         `{"event":"LoadInfo"}`,
+			TakeMachineResult:      `{"event":"TakeMachine"}`,
+			GetMachineDetailResult: `{"event":"MachineDetail"}`,
+			BeginGameResult:        `{"event":"BeginGame"}`,
+			BalanceExchangeResult:  `{"event":"BalanceExchange"}`,
+			CreditExchangeResult:   `{"event":"CreditExchange"}`,
+			LeaveMachineResult:     `{"event":"LeaveMachine"}`,
 		}
 		server := httptest.NewServer(gode.NewServer(stubGame))
 		url := makeWebSocketURL(server, "/ws/game")
@@ -74,27 +74,27 @@ func TestWebSocketGame(t *testing.T) {
 			//login
 			writeBinaryMsg(t, wsClient, `{"action":"loginBySid","sid":"21d9b36e42c8275a4359f6815b859df05ec2bb0a"}`)
 			assertWSReceiveBinaryMsg(t, wsClient, `{"action":"onLogin","result":{"event":true,"data":{"COID":2688,"ExchangeRate":1,"GameID":0,"HallID":6,"Sid":"","Test":1,"UserID":0}}}`)
-			assertWSReceiveBinaryMsg(t, wsClient, `{"action":"onTakeMachine","result":"OnTakeMachine"}`)
+			assertWSReceiveBinaryMsg(t, wsClient, `{"action":"onTakeMachine","result":{"event":"TakeMachine"}}`)
 
 			//onLoadInfo
 			writeBinaryMsg(t, wsClient, `{"action":"onLoadInfo2","sid":"21d9b36e42c8275a4359f6815b859df05ec2bb0a"}`)
-			assertWSReceiveBinaryMsg(t, wsClient, `{"action":"onOnLoadInfo2","result":"OnLoadInfo"}`)
+			assertWSReceiveBinaryMsg(t, wsClient, `{"action":"onOnLoadInfo2","result":{"event":"LoadInfo"}}`)
 
 			//getMachineDetail
 			writeBinaryMsg(t, wsClient, `{"action":"getMachineDetail","sid":"21d9b36e42c8275a4359f6815b859df05ec2bb0a"}`)
-			assertWSReceiveBinaryMsg(t, wsClient, `{"action":"onGetMachineDetail","result":"OnGetMachineDetail"}`)
+			assertWSReceiveBinaryMsg(t, wsClient, `{"action":"onGetMachineDetail","result":{"event":"MachineDetail"}}`)
 
 			//開分
 			writeBinaryMsg(t, wsClient, `{"action":"creditExchange"}`)
-			assertWSReceiveBinaryMsg(t, wsClient, `{"action":"onCreditExchange","result":"credit"}`)
+			assertWSReceiveBinaryMsg(t, wsClient, `{"action":"onCreditExchange","result":{"event":"CreditExchange"}}`)
 
 			//begin game
 			writeBinaryMsg(t, wsClient, `{"action":"beginGame4"}`)
-			assertWSReceiveBinaryMsg(t, wsClient, `{"action":"onBeginGame","result":"OnBeginGame"}`)
+			assertWSReceiveBinaryMsg(t, wsClient, `{"action":"onBeginGame","result":{"event":"BeginGame"}}`)
 
 			//洗分
 			writeBinaryMsg(t, wsClient, `{"action":"balanceExchange"}`)
-			assertWSReceiveBinaryMsg(t, wsClient, `{"action":"onBalanceExchange","result":"balance"}`)
+			assertWSReceiveBinaryMsg(t, wsClient, `{"action":"onBalanceExchange","result":{"event":"BalanceExchange"}}`)
 		})
 
 		err := wsClient.Close()
