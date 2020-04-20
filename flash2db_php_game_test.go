@@ -91,6 +91,24 @@ func TestFlash2dbPhpGame(t *testing.T) {
 		assertByteEqual(t, got, want)
 	})
 
+	t.Run("beginGame get correct url and return result", func(t *testing.T) {
+		var sid SessionID = "sidSid123"
+		var gameCode GameCode = 56
+		var betInfo string = `{"BetLevel":1}`
+		expectedURL := `/amfphp/json.php/casino.slot.line243.BuBuGaoSheng.beginGame/sidSid123/56/{"BetLevel":1}`
+
+		srv := NewTestingServer(t, expectedURL, `begin`)
+		defer srv.Close()
+
+		g, err := NewFlash2dbPhpGame(srv.URL, 5145)
+
+		assertNoError(t, err)
+
+		want := []byte(`begin`)
+		got := g.BeginGame(sid, gameCode, betInfo)
+		assertByteEqual(t, got, want)
+	})
+
 	t.Run("balanceExchange get correct url and return result", func(t *testing.T) {
 		var userID UserID = 362907402
 		var gameCode GameCode = 1
@@ -126,7 +144,6 @@ func TestFlash2dbPhpGame(t *testing.T) {
 		got := g.OnLeaveMachine(userID, hallID, gameCode)
 		assertByteEqual(t, got, want)
 	})
-
 }
 
 func NewTestingServer(t *testing.T, expectedURL string, response string) *httptest.Server {
@@ -154,6 +171,6 @@ func assertNoError(t *testing.T, err error) {
 func assertURLEqual(t *testing.T, r *http.Request, want string) {
 	t.Helper()
 	if r.URL.Path != want {
-		t.Errorf("wanted URL %q, got %q", want, r.URL)
+		t.Errorf("URL not matched\n want %q\n, got %q", want, r.URL)
 	}
 }

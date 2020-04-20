@@ -55,8 +55,10 @@ func (g *Flash2dbPhpGame) OnGetMachineDetail(id UserID, gc GameCode) []byte {
 	return g.call(url)
 }
 
-func (Flash2dbPhpGame) BeginGame() []byte {
-	panic("implement me")
+func (g *Flash2dbPhpGame) BeginGame(sid SessionID, gameCode GameCode, betInfo string) []byte {
+	u := g.generateURL("beginGame", sid, gameCode, betInfo)
+
+	return g.call(u)
 }
 
 //creditExchange($_sSid, $_iGameCode, $_sBetBase, $_iCredit)
