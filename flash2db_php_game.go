@@ -14,6 +14,7 @@ const Path5145 = "/casino.slot.line243.BuBuGaoSheng."
 const (
 	MachineOccupyAuto = "machineOccupyAuto"
 	OnLoadInfo        = "onLoadInfo"
+	GetMachineDetail  = "getMachineDetail"
 )
 
 type Flash2dbPhpGame struct {
@@ -48,8 +49,10 @@ func (g *Flash2dbPhpGame) OnLoadInfo(id UserID, gc GameCode) []byte {
 	return g.call(url)
 }
 
-func (Flash2dbPhpGame) OnGetMachineDetail() []byte {
-	panic("implement me")
+func (g *Flash2dbPhpGame) OnGetMachineDetail(id UserID, gc GameCode) []byte {
+	url := g.generateURL(GetMachineDetail, id, gc)
+
+	return g.call(url)
 }
 
 func (Flash2dbPhpGame) BeginGame() []byte {

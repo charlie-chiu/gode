@@ -52,6 +52,26 @@ func TestFlash2dbPhpGame(t *testing.T) {
 		assertByteEqual(t, got, want)
 	})
 
+	t.Run("getMachineDetail get correct url and return result", func(t *testing.T) {
+
+		var userID UserID = 362907402
+		var gameCode GameCode = 1
+		gamePath := "/casino.slot.line243.BuBuGaoSheng."
+		phpFunctionName := "getMachineDetail"
+		expectedURL := fmt.Sprintf("%s%s%s/%d/%d", PathPrefix, gamePath, phpFunctionName, userID, gameCode)
+
+		srv := NewTestingServer(t, expectedURL, `getMachineDetail`)
+		defer srv.Close()
+
+		g, err := NewFlash2dbPhpGame(srv.URL, 5145)
+
+		assertNoError(t, err)
+
+		want := []byte(`getMachineDetail`)
+		got := g.OnGetMachineDetail(userID, gameCode)
+		assertByteEqual(t, got, want)
+	})
+
 }
 
 func NewTestingServer(t *testing.T, expectedURL string, response string) *httptest.Server {
