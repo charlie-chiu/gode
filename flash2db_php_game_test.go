@@ -72,6 +72,25 @@ func TestFlash2dbPhpGame(t *testing.T) {
 		assertByteEqual(t, got, want)
 	})
 
+	t.Run("creditExchange get correct url and return result", func(t *testing.T) {
+		var sid SessionID = "sidSid123"
+		var gameCode GameCode = 56
+		var betBase string = "1:5"
+		var credit int = 1000
+		expectedURL := `/amfphp/json.php/casino.slot.line243.BuBuGaoSheng.creditExchange/sidSid123/56/1:5/1000`
+
+		srv := NewTestingServer(t, expectedURL, `credit`)
+		defer srv.Close()
+
+		g, err := NewFlash2dbPhpGame(srv.URL, 5145)
+
+		assertNoError(t, err)
+
+		want := []byte(`credit`)
+		got := g.OnCreditExchange(sid, gameCode, betBase, credit)
+		assertByteEqual(t, got, want)
+	})
+
 }
 
 func NewTestingServer(t *testing.T, expectedURL string, response string) *httptest.Server {

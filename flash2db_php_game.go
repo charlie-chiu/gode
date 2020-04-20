@@ -59,8 +59,11 @@ func (Flash2dbPhpGame) BeginGame() []byte {
 	panic("implement me")
 }
 
-func (Flash2dbPhpGame) OnCreditExchange() []byte {
-	panic("implement me")
+//creditExchange($_sSid, $_iGameCode, $_sBetBase, $_iCredit)
+func (g *Flash2dbPhpGame) OnCreditExchange(id SessionID, code GameCode, betBase string, credit int) []byte {
+	url := g.generateURL("creditExchange", id, code, betBase, credit)
+
+	return g.call(url)
 }
 
 func (Flash2dbPhpGame) OnBalanceExchange() []byte {
@@ -87,7 +90,7 @@ func (g *Flash2dbPhpGame) generateURL(phpFunctionName string, param ...interface
 	b.WriteString(fmt.Sprintf("%s%s", g.url, phpFunctionName))
 
 	for _, p := range param {
-		b.WriteString(fmt.Sprintf("/%d", p))
+		b.WriteString(fmt.Sprintf("/%v", p))
 	}
 
 	return b.String()
