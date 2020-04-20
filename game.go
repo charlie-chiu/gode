@@ -27,4 +27,5 @@ type (
 	GameType  int
 	GameCode  int
 	UserID    int
+	HallID    int
 )

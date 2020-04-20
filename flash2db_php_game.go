@@ -66,8 +66,10 @@ func (g *Flash2dbPhpGame) OnCreditExchange(id SessionID, code GameCode, betBase 
 	return g.call(url)
 }
 
-func (Flash2dbPhpGame) OnBalanceExchange() []byte {
-	panic("implement me")
+func (g *Flash2dbPhpGame) OnBalanceExchange(uid UserID, hid HallID, code GameCode) []byte {
+	url := g.generateURL("balanceExchange", uid, hid, code)
+
+	return g.call(url)
 }
 
 func (g *Flash2dbPhpGame) call(url string) []byte {
