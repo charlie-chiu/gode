@@ -98,20 +98,30 @@ func (s *Server) handleMessage(ws *wsServer, msg []byte) {
 		log.Println("Json Unmarshal Error: ", err)
 	}
 
+	var (
+		sid      SessionID = ""
+		uid      UserID    = 455648515
+		hid      HallID    = 6
+		gameCode GameCode  = 0
+		bet      string    = `{"BetLevel":1}`
+		betBase  string    = "1:1"
+		credit   int       = 1000
+	)
+
 	switch data.Action {
 	case login:
 		s.writeBinaryMsg(ws, []byte(msgOnLogin))
-		s.writeBinaryMsg(ws, s.g.OnTakeMachine())
+		s.writeBinaryMsg(ws, s.g.OnTakeMachine(uid))
 	case onLoadInfo:
-		s.writeBinaryMsg(ws, s.g.OnLoadInfo())
+		s.writeBinaryMsg(ws, s.g.OnLoadInfo(uid, gameCode))
 	case getMachineDetail:
-		s.writeBinaryMsg(ws, s.g.OnGetMachineDetail())
+		s.writeBinaryMsg(ws, s.g.OnGetMachineDetail(uid, gameCode))
 	case beginGame:
-		s.writeBinaryMsg(ws, s.g.BeginGame())
+		s.writeBinaryMsg(ws, s.g.BeginGame(sid, gameCode, bet))
 	case creditExchange:
-		s.writeBinaryMsg(ws, s.g.OnCreditExchange())
+		s.writeBinaryMsg(ws, s.g.OnCreditExchange(sid, gameCode, betBase, credit))
 	case balanceExchange:
-		s.writeBinaryMsg(ws, s.g.OnBalanceExchange())
+		s.writeBinaryMsg(ws, s.g.OnBalanceExchange(uid, hid, gameCode))
 	}
 }
 

@@ -18,30 +18,35 @@ type StubPhpGame struct {
 	BeginGameMessage        []byte
 	BalanceExchangeMsg      []byte
 	CreditExchangeMsg       []byte
+	LeaveMachineMessage     []byte
 }
 
-func (s StubPhpGame) OnCreditExchange() []byte {
-	return s.CreditExchangeMsg
-}
-
-func (s StubPhpGame) OnBalanceExchange() []byte {
-	return s.BalanceExchangeMsg
-}
-
-func (s StubPhpGame) BeginGame() []byte {
-	return s.BeginGameMessage
-}
-
-func (s StubPhpGame) OnTakeMachine() []byte {
+func (s StubPhpGame) OnTakeMachine(uid gode.UserID) []byte {
 	return s.TakeMachineMessage
 }
 
-func (s StubPhpGame) OnLoadInfo() []byte {
+func (s StubPhpGame) OnLoadInfo(uid gode.UserID, gc gode.GameCode) []byte {
 	return s.LoadInfoMessage
 }
 
-func (s StubPhpGame) OnGetMachineDetail() []byte {
+func (s StubPhpGame) OnGetMachineDetail(uid gode.UserID, gc gode.GameCode) []byte {
 	return s.GetMachineDetailMessage
+}
+
+func (s StubPhpGame) OnCreditExchange(sid gode.SessionID, gc gode.GameCode, bb string, credit int) []byte {
+	return s.CreditExchangeMsg
+}
+
+func (s StubPhpGame) OnBalanceExchange(uid gode.UserID, hid gode.HallID, gc gode.GameCode) []byte {
+	return s.BalanceExchangeMsg
+}
+
+func (s StubPhpGame) BeginGame(sid gode.SessionID, gc gode.GameCode, betInfo string) []byte {
+	return s.BeginGameMessage
+}
+
+func (s StubPhpGame) OnLeaveMachine(uid gode.UserID, hid gode.HallID, gameCode gode.GameCode) []byte {
+	return s.LeaveMachineMessage
 }
 
 func TestWebSocketGame(t *testing.T) {
