@@ -72,6 +72,12 @@ func (g *Flash2dbPhpGame) OnBalanceExchange(uid UserID, hid HallID, code GameCod
 	return g.call(url)
 }
 
+func (g *Flash2dbPhpGame) OnLeaveMachine(uid UserID, hid HallID, gameCode GameCode) []byte {
+	url := g.generateURL("machineLeave", uid, hid, gameCode)
+
+	return g.call(url)
+}
+
 func (g *Flash2dbPhpGame) call(url string) []byte {
 	response, err := http.Get(url)
 	if err != nil {

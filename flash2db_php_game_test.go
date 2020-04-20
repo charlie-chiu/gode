@@ -109,6 +109,24 @@ func TestFlash2dbPhpGame(t *testing.T) {
 		assertByteEqual(t, got, want)
 	})
 
+	t.Run("machineLeave get correct url and return result", func(t *testing.T) {
+		var userID UserID = 362907402
+		var gameCode GameCode = 1
+		var hallID HallID = 6
+		expectedURL := `/amfphp/json.php/casino.slot.line243.BuBuGaoSheng.machineLeave/362907402/6/1`
+
+		srv := NewTestingServer(t, expectedURL, `leave`)
+		defer srv.Close()
+
+		g, err := NewFlash2dbPhpGame(srv.URL, 5145)
+
+		assertNoError(t, err)
+
+		want := []byte(`leave`)
+		got := g.OnLeaveMachine(userID, hallID, gameCode)
+		assertByteEqual(t, got, want)
+	})
+
 }
 
 func NewTestingServer(t *testing.T, expectedURL string, response string) *httptest.Server {
