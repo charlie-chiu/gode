@@ -15,6 +15,10 @@ const (
 	MachineOccupyAuto = "machineOccupyAuto"
 	OnLoadInfo        = "onLoadInfo"
 	GetMachineDetail  = "getMachineDetail"
+	CreditExchange    = "creditExchange"
+	BeginGame         = "beginGame"
+	BalanceExchange   = "balanceExchange"
+	MachineLeave      = "machineLeave"
 )
 
 type Flash2dbPhpGame struct {
@@ -56,26 +60,25 @@ func (g *Flash2dbPhpGame) OnGetMachineDetail(id UserID, gc GameCode) []byte {
 }
 
 func (g *Flash2dbPhpGame) BeginGame(sid SessionID, gameCode GameCode, betInfo string) []byte {
-	u := g.generateURL("beginGame", sid, gameCode, betInfo)
+	u := g.generateURL(BeginGame, sid, gameCode, betInfo)
 
 	return g.call(u)
 }
 
-//creditExchange($_sSid, $_iGameCode, $_sBetBase, $_iCredit)
 func (g *Flash2dbPhpGame) OnCreditExchange(id SessionID, code GameCode, betBase string, credit int) []byte {
-	url := g.generateURL("creditExchange", id, code, betBase, credit)
+	url := g.generateURL(CreditExchange, id, code, betBase, credit)
 
 	return g.call(url)
 }
 
 func (g *Flash2dbPhpGame) OnBalanceExchange(uid UserID, hid HallID, code GameCode) []byte {
-	url := g.generateURL("balanceExchange", uid, hid, code)
+	url := g.generateURL(BalanceExchange, uid, hid, code)
 
 	return g.call(url)
 }
 
 func (g *Flash2dbPhpGame) OnLeaveMachine(uid UserID, hid HallID, gameCode GameCode) []byte {
-	url := g.generateURL("machineLeave", uid, hid, gameCode)
+	url := g.generateURL(MachineLeave, uid, hid, gameCode)
 
 	return g.call(url)
 }

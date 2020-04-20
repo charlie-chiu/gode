@@ -33,7 +33,6 @@ func TestFlash2dbPhpGame(t *testing.T) {
 	})
 
 	t.Run("onLoadInfo get correct url and return result", func(t *testing.T) {
-
 		var userID UserID = 362907402
 		var gameCode GameCode = 1
 		gamePath := "/casino.slot.line243.BuBuGaoSheng."
