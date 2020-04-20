@@ -13,12 +13,13 @@ type Server struct {
 }
 
 const (
-	login            = "loginBySid"
-	onLoadInfo       = "onLoadInfo2"
-	getMachineDetail = "getMachineDetail"
-	beginGame        = "beginGame4"
-	creditExchange   = "creditExchange"
-	balanceExchange  = "balanceExchange"
+	// action from client
+	ClientLogin            = "loginBySid"
+	ClientOnLoadInfo       = "onLoadInfo2"
+	ClientGetMachineDetail = "getMachineDetail"
+	ClientBeginGame        = "beginGame4"
+	ClientExchangeCredit   = "creditExchange"
+	ClientExchangeBalance  = "balanceExchange"
 )
 
 func NewServer(g Game) *Server {
@@ -105,30 +106,30 @@ func (s *Server) handleMessage(ws *wsServer, msg []byte) {
 		sid      SessionID = "b285306cc11c53d9877791427f892d87354bb8a8"
 		uid      UserID    = 455648515
 		hid      HallID    = 6
-		gameCode GameCode  = 95
+		gameCode GameCode  = 36
 		bet      string    = `{"BetLevel":1}`
 		betBase  string    = "1:1"
 		credit   int       = 1000
 	)
 
 	switch data.Action {
-	case login:
+	case ClientLogin:
 		ws.writeBinaryMsg(ws, []byte(msgOnLogin))
 		msg := s.makeSendJSON("onTakeMachine", s.g.OnTakeMachine(uid))
 		ws.writeBinaryMsg(ws, msg)
-	case onLoadInfo:
+	case ClientOnLoadInfo:
 		msg := s.makeSendJSON("onOnLoadInfo2", s.g.OnLoadInfo(uid, gameCode))
 		ws.writeBinaryMsg(ws, msg)
-	case getMachineDetail:
+	case ClientGetMachineDetail:
 		msg := s.makeSendJSON("onGetMachineDetail", s.g.OnGetMachineDetail(uid, gameCode))
 		ws.writeBinaryMsg(ws, msg)
-	case beginGame:
+	case ClientBeginGame:
 		msg := s.makeSendJSON("onBeginGame", s.g.BeginGame(sid, gameCode, bet))
 		ws.writeBinaryMsg(ws, msg)
-	case creditExchange:
+	case ClientExchangeCredit:
 		msg := s.makeSendJSON("onCreditExchange", s.g.OnCreditExchange(sid, gameCode, betBase, credit))
 		ws.writeBinaryMsg(ws, msg)
-	case balanceExchange:
+	case ClientExchangeBalance:
 		msg := s.makeSendJSON("onBalanceExchange", s.g.OnBalanceExchange(uid, hid, gameCode))
 		ws.writeBinaryMsg(ws, msg)
 	}
