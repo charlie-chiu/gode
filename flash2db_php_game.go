@@ -23,7 +23,8 @@ const (
 )
 
 type Flash2dbPhpGame struct {
-	url string
+	url      string
+	gameCode GameCode
 }
 
 func NewFlash2dbPhpGame(host string, gameType GameType) (*Flash2dbPhpGame, error) {
@@ -45,7 +46,23 @@ func NewFlash2dbPhpGame(host string, gameType GameType) (*Flash2dbPhpGame, error
 func (g *Flash2dbPhpGame) OnTakeMachine(id UserID) json.RawMessage {
 	url := g.generateURL(MachineOccupyAuto, id)
 
-	return g.call(url)
+	apiResult := g.call(url)
+	type data struct {
+		Event bool `json:"event"`
+		Data  struct {
+			Event    bool `json:"event"`
+			GameCode int  `json:"GameCode"`
+		} `json:"data"`
+	}
+	message := &data{}
+
+	err := json.Unmarshal(apiResult, message)
+	if err != nil {
+		log.Fatalf("problem unmarshal JSON when parsing %s %v", apiResult, err)
+	}
+	g.gameCode = GameCode(message.Data.GameCode)
+
+	return apiResult
 }
 
 func (g *Flash2dbPhpGame) OnLoadInfo(id UserID, gc GameCode) json.RawMessage {

@@ -7,6 +7,30 @@ import (
 	"testing"
 )
 
+func TestInternalValue(t *testing.T) {
+	t.Run("storage GameCode after take machine", func(t *testing.T) {
+		response := string(`{"event":true,"data":{"event":true,"GameCode":43}}`)
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprint(w, response)
+		})
+		svr := httptest.NewServer(handler)
+		game, _ := NewFlash2dbPhpGame(svr.URL, 5145)
+		want := GameCode(0)
+		got := game.gameCode
+		if got != want {
+			t.Errorf("game code zero value error, got %d, want %d", gameCode, want)
+		}
+		dummyUserID := UserID(0)
+		game.OnTakeMachine(dummyUserID)
+
+		want = GameCode(43)
+		got = game.gameCode
+		if got != want {
+			t.Errorf("game code zero value error, got %d, want %d", gameCode, want)
+		}
+	})
+}
+
 func TestFlash2dbPhpGame(t *testing.T) {
 	t.Run("constructor should return an error when game path not exist", func(t *testing.T) {
 		dummyURL := "127.0.0.1"
