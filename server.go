@@ -2,7 +2,6 @@ package gode
 
 import (
 	"encoding/json"
-	"html/template"
 	"log"
 	"net/http"
 )
@@ -27,26 +26,11 @@ func NewServer(g Game) *Server {
 	server.g = g
 
 	router := http.NewServeMux()
-	router.Handle("/game", http.HandlerFunc(server.demoPageHandler))
 	router.Handle("/ws/game", http.HandlerFunc(server.gameHandler))
 
 	server.Handler = router
 
 	return server
-}
-
-func (s *Server) demoPageHandler(w http.ResponseWriter, r *http.Request) {
-	const demoTemplatePath = "demo.html"
-	tmpl, err := template.ParseFiles(demoTemplatePath)
-	if err != nil {
-		log.Fatalf("problem opening %s %v", demoTemplatePath, err)
-	}
-
-	const welcomeMsg = "a simple API demo page"
-	err = tmpl.Execute(w, struct{ WelcomeMsg string }{welcomeMsg})
-	if err != nil {
-		log.Fatal("template.Execute Error", err)
-	}
 }
 
 func (s *Server) gameHandler(w http.ResponseWriter, r *http.Request) {

@@ -171,18 +171,6 @@ func TestGet(t *testing.T) {
 
 		assertResponseCode(t, responseRecorder.Code, http.StatusNotFound)
 	})
-
-	t.Run("/game returns 200", func(t *testing.T) {
-		stubGame := StubPhpGame{}
-		server := gode.NewServer(stubGame)
-
-		request, _ := http.NewRequest(http.MethodGet, "/game", nil)
-		responseRecorder := httptest.NewRecorder()
-
-		server.ServeHTTP(responseRecorder, request)
-
-		assertResponseCode(t, responseRecorder.Code, http.StatusOK)
-	})
 }
 
 func assertResponseCode(t *testing.T, got, expected int) {
