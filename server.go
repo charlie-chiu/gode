@@ -8,7 +8,7 @@ import (
 
 type Server struct {
 	http.Handler
-	g      Game
+	game   Game
 	client Client
 }
 
@@ -27,9 +27,10 @@ const (
 )
 
 func NewServer(c Client, g Game) *Server {
-	server := new(Server)
-	server.g = g
-	server.client = c
+	server := &Server{
+		game:   g,
+		client: c,
+	}
 
 	router := http.NewServeMux()
 	router.Handle("/ws/game", http.HandlerFunc(server.gameHandler))
@@ -105,22 +106,22 @@ func (s *Server) handleMessage(ws *wsServer, msg []byte) {
 	switch data.Action {
 	case ClientLogin:
 		ws.writeBinaryMsg(ws, []byte(msgOnLogin))
-		msg := s.makeSendJSON("onTakeMachine", s.g.OnTakeMachine(uid))
+		msg := s.makeSendJSON("onTakeMachine", s.game.OnTakeMachine(uid))
 		ws.writeBinaryMsg(ws, msg)
 	case ClientOnLoadInfo:
-		msg := s.makeSendJSON("onOnLoadInfo2", s.g.OnLoadInfo(uid, gameCode))
+		msg := s.makeSendJSON("onOnLoadInfo2", s.game.OnLoadInfo(uid, gameCode))
 		ws.writeBinaryMsg(ws, msg)
 	case ClientGetMachineDetail:
-		msg := s.makeSendJSON("onGetMachineDetail", s.g.OnGetMachineDetail(uid, gameCode))
+		msg := s.makeSendJSON("onGetMachineDetail", s.game.OnGetMachineDetail(uid, gameCode))
 		ws.writeBinaryMsg(ws, msg)
 	case ClientBeginGame:
-		msg := s.makeSendJSON("onBeginGame", s.g.BeginGame(sid, gameCode, bet))
+		msg := s.makeSendJSON("onBeginGame", s.game.BeginGame(sid, gameCode, bet))
 		ws.writeBinaryMsg(ws, msg)
 	case ClientExchangeCredit:
-		msg := s.makeSendJSON("onCreditExchange", s.g.OnCreditExchange(sid, gameCode, betBase, credit))
+		msg := s.makeSendJSON("onCreditExchange", s.game.OnCreditExchange(sid, gameCode, betBase, credit))
 		ws.writeBinaryMsg(ws, msg)
 	case ClientExchangeBalance:
-		msg := s.makeSendJSON("onBalanceExchange", s.g.OnBalanceExchange(uid, hid, gameCode))
+		msg := s.makeSendJSON("onBalanceExchange", s.game.OnBalanceExchange(uid, hid, gameCode))
 		ws.writeBinaryMsg(ws, msg)
 	}
 }
@@ -131,7 +132,7 @@ func (s *Server) makeSendJSON(action string, APIResult json.RawMessage) json.Raw
 		Result: APIResult,
 	})
 	if err != nil {
-		log.Print("Problem marshal JSON", err)
+		log.Printf("Problem marshal JSON: action %q, APIResult %v, %v", action, APIResult, err)
 	}
 	return msg
 }

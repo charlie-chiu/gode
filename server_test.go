@@ -25,27 +25,21 @@ type StubPhpGame struct {
 func (s StubPhpGame) OnTakeMachine(uid gode.UserID) json.RawMessage {
 	return json.RawMessage(s.TakeMachineResult)
 }
-
 func (s StubPhpGame) OnLoadInfo(uid gode.UserID, gc gode.GameCode) json.RawMessage {
 	return json.RawMessage(s.LoadInfoResult)
 }
-
 func (s StubPhpGame) OnGetMachineDetail(uid gode.UserID, gc gode.GameCode) json.RawMessage {
 	return json.RawMessage(s.GetMachineDetailResult)
 }
-
 func (s StubPhpGame) OnCreditExchange(sid gode.SessionID, gc gode.GameCode, bb string, credit int) json.RawMessage {
 	return json.RawMessage(s.CreditExchangeResult)
 }
-
 func (s StubPhpGame) OnBalanceExchange(uid gode.UserID, hid gode.HallID, gc gode.GameCode) json.RawMessage {
 	return json.RawMessage(s.BalanceExchangeResult)
 }
-
 func (s StubPhpGame) BeginGame(sid gode.SessionID, gc gode.GameCode, betInfo string) json.RawMessage {
 	return json.RawMessage(s.BeginGameResult)
 }
-
 func (s StubPhpGame) OnLeaveMachine(uid gode.UserID, hid gode.HallID, gameCode gode.GameCode) json.RawMessage {
 	return json.RawMessage(s.LeaveMachineResult)
 }
