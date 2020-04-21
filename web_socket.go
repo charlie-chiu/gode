@@ -1,6 +1,7 @@
 package gode
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 
@@ -28,27 +29,26 @@ func newWSServer(w http.ResponseWriter, r *http.Request) *wsServer {
 	return &wsServer{conn}
 }
 
-func (w *wsServer) waitForMessage() []byte {
-	_, data, err := w.ReadMessage()
-	if err != nil {
-		log.Panicf("error reading from web socket %v\n", err)
-	}
-	//log.Printf("WS got messages type: %d / content : %v", messageType, msg)
+func (w *wsServer) listenJSON(wsMsg chan []byte) {
+	for {
+		_, msg, err := w.ReadMessage()
+		if err != nil {
+			log.Println("ReadMessage Error: ", err)
+			break
+		}
 
-	return data
+		//maybe shouldn't valid JSON here
+		if !json.Valid(msg) {
+			log.Println("not Valid JSON", string(msg))
+			continue
+		}
+
+		wsMsg <- msg
+	}
 }
 
-func (w *wsServer) write(p []byte) (n int, err error) {
-	err = w.WriteMessage(websocket.TextMessage, p)
-	if err != nil {
-		return 0, err
-	}
-
-	return len(p), nil
-}
-
-func (w *wsServer) writeBinaryMsg(ws *wsServer, msg []byte) {
-	err := ws.WriteMessage(websocket.BinaryMessage, msg)
+func (w *wsServer) writeBinaryMsg(msg []byte) {
+	err := w.WriteMessage(websocket.BinaryMessage, msg)
 	if err != nil {
 		log.Println("Write Error: ", err)
 	}

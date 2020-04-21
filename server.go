@@ -24,6 +24,7 @@ const (
 const (
 	// actions to client
 	ServerReady = "ready"
+	ServerLogin = "onLogin"
 )
 
 func NewServer(c Client, g Game) *Server {
@@ -52,12 +53,11 @@ type wsDataSend struct {
 func (s *Server) gameHandler(w http.ResponseWriter, r *http.Request) {
 	ws := newWSServer(w, r)
 
-	readyMsg := s.makeSendJSON(ServerReady, []byte(`{"event":true,"data":null}`))
-	ws.writeBinaryMsg(ws, readyMsg)
+	ws.writeBinaryMsg(s.makeSendJSON(ServerReady, []byte(`{"event":true,"data":null}`)))
 
 	// keep listen new message and handle it
 	wsMsg := make(chan []byte)
-	go s.listenMessage(ws, wsMsg)
+	go ws.listenJSON(wsMsg)
 	for {
 		select {
 		case msg := <-wsMsg:
@@ -66,27 +66,7 @@ func (s *Server) gameHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) listenMessage(ws *wsServer, wsMsg chan []byte) {
-	for {
-		_, msg, err := ws.ReadMessage()
-		if err != nil {
-			log.Println("ReadMessage Error: ", err)
-			break
-		}
-
-		//maybe shouldn't valid JSON here
-		if !json.Valid(msg) {
-			log.Println("not Valid JSON", string(msg))
-			continue
-		}
-
-		wsMsg <- msg
-	}
-}
-
 func (s *Server) handleMessage(ws *wsServer, msg []byte) {
-	// todo: 應該寫成獨立的handler 之類的，之後再視需求修改
-	const msgOnLogin = `{"action":"onLogin","result":{"event":true,"data":{"COID":2688,"ExchangeRate":1,"GameID":0,"HallID":6,"Sid":"","Test":1,"UserID":0}}}`
 	data := &wsDataReceive{}
 	err := json.Unmarshal(msg, data)
 	if err != nil {
@@ -105,24 +85,24 @@ func (s *Server) handleMessage(ws *wsServer, msg []byte) {
 
 	switch data.Action {
 	case ClientLogin:
-		ws.writeBinaryMsg(ws, []byte(msgOnLogin))
-		msg := s.makeSendJSON("onTakeMachine", s.game.OnTakeMachine(uid))
-		ws.writeBinaryMsg(ws, msg)
+		const loginResult = `{"event":true,"data":{"COID":2688,"ExchangeRate":1,"GameID":0,"HallID":6,"Sid":"","Test":1,"UserID":0}}`
+		ws.writeBinaryMsg(s.makeSendJSON(ServerLogin, []byte(loginResult)))
+		ws.writeBinaryMsg(s.makeSendJSON("onTakeMachine", s.game.OnTakeMachine(uid)))
 	case ClientOnLoadInfo:
 		msg := s.makeSendJSON("onOnLoadInfo2", s.game.OnLoadInfo(uid, dummyGameCode))
-		ws.writeBinaryMsg(ws, msg)
+		ws.writeBinaryMsg(msg)
 	case ClientGetMachineDetail:
 		msg := s.makeSendJSON("onGetMachineDetail", s.game.OnGetMachineDetail(uid, dummyGameCode))
-		ws.writeBinaryMsg(ws, msg)
+		ws.writeBinaryMsg(msg)
 	case ClientBeginGame:
 		msg := s.makeSendJSON("onBeginGame", s.game.BeginGame(sid, dummyGameCode, bet))
-		ws.writeBinaryMsg(ws, msg)
+		ws.writeBinaryMsg(msg)
 	case ClientExchangeCredit:
 		msg := s.makeSendJSON("onCreditExchange", s.game.OnCreditExchange(sid, dummyGameCode, betBase, credit))
-		ws.writeBinaryMsg(ws, msg)
+		ws.writeBinaryMsg(msg)
 	case ClientExchangeBalance:
 		msg := s.makeSendJSON("onBalanceExchange", s.game.OnBalanceExchange(uid, hid, dummyGameCode))
-		ws.writeBinaryMsg(ws, msg)
+		ws.writeBinaryMsg(msg)
 	}
 }
 
