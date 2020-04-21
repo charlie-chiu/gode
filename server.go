@@ -12,13 +12,17 @@ type Server struct {
 }
 
 const (
-	// action from client
+	// actions from client
 	ClientLogin            = "loginBySid"
 	ClientOnLoadInfo       = "onLoadInfo2"
 	ClientGetMachineDetail = "getMachineDetail"
 	ClientBeginGame        = "beginGame4"
 	ClientExchangeCredit   = "creditExchange"
 	ClientExchangeBalance  = "balanceExchange"
+)
+const (
+	// actions to client
+	ServerReady = "ready"
 )
 
 func NewServer(g Game) *Server {
@@ -33,23 +37,6 @@ func NewServer(g Game) *Server {
 	return server
 }
 
-func (s *Server) gameHandler(w http.ResponseWriter, r *http.Request) {
-	ws := newWSServer(w, r)
-	//tell client we are ready to handle msg
-	const msgOnReady = `{"action":"ready","result":{"event":true,"data":null}}`
-	ws.writeBinaryMsg(ws, []byte(msgOnReady))
-
-	wsMsg := make(chan []byte)
-	go s.readMessage(ws, wsMsg)
-
-	for {
-		select {
-		case msg := <-wsMsg:
-			s.handleMessage(ws, msg)
-		}
-	}
-}
-
 type wsDataReceive struct {
 	Action string `json:"action"`
 }
@@ -59,7 +46,24 @@ type wsDataSend struct {
 	Result json.RawMessage `json:"result"`
 }
 
-func (s *Server) readMessage(ws *wsServer, wsMsg chan []byte) {
+func (s *Server) gameHandler(w http.ResponseWriter, r *http.Request) {
+	ws := newWSServer(w, r)
+
+	readyMsg := s.makeSendJSON(ServerReady, []byte(`{"event":true,"data":null}`))
+	ws.writeBinaryMsg(ws, readyMsg)
+
+	// keep listen new message and handle it
+	wsMsg := make(chan []byte)
+	go s.listenMessage(ws, wsMsg)
+	for {
+		select {
+		case msg := <-wsMsg:
+			s.handleMessage(ws, msg)
+		}
+	}
+}
+
+func (s *Server) listenMessage(ws *wsServer, wsMsg chan []byte) {
 	for {
 		_, msg, err := ws.ReadMessage()
 		if err != nil {
@@ -119,7 +123,7 @@ func (s *Server) handleMessage(ws *wsServer, msg []byte) {
 	}
 }
 
-func (s *Server) makeSendJSON(action string, APIResult []byte) []byte {
+func (s *Server) makeSendJSON(action string, APIResult json.RawMessage) json.RawMessage {
 	msg, err := json.Marshal(&wsDataSend{
 		Action: action,
 		Result: APIResult,
