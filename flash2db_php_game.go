@@ -66,37 +66,37 @@ func (g *Flash2dbPhpGame) OnTakeMachine(id UserID) json.RawMessage {
 }
 
 func (g *Flash2dbPhpGame) OnLoadInfo(id UserID, gc GameCode) json.RawMessage {
-	url := g.generateURL(OnLoadInfo, id, gc)
+	url := g.generateURL(OnLoadInfo, id, g.gameCode)
 
 	return g.call(url)
 }
 
 func (g *Flash2dbPhpGame) OnGetMachineDetail(id UserID, gc GameCode) json.RawMessage {
-	url := g.generateURL(GetMachineDetail, id, gc)
+	url := g.generateURL(GetMachineDetail, id, g.gameCode)
 
 	return g.call(url)
 }
 
 func (g *Flash2dbPhpGame) BeginGame(sid SessionID, gameCode GameCode, betInfo string) json.RawMessage {
-	u := g.generateURL(BeginGame, sid, gameCode, betInfo)
+	u := g.generateURL(BeginGame, sid, g.gameCode, betInfo)
 
 	return g.call(u)
 }
 
 func (g *Flash2dbPhpGame) OnCreditExchange(id SessionID, code GameCode, betBase string, credit int) json.RawMessage {
-	url := g.generateURL(CreditExchange, id, code, betBase, credit)
+	url := g.generateURL(CreditExchange, id, g.gameCode, betBase, credit)
 
 	return g.call(url)
 }
 
 func (g *Flash2dbPhpGame) OnBalanceExchange(uid UserID, hid HallID, code GameCode) json.RawMessage {
-	url := g.generateURL(BalanceExchange, uid, hid, code)
+	url := g.generateURL(BalanceExchange, uid, hid, g.gameCode)
 
 	return g.call(url)
 }
 
 func (g *Flash2dbPhpGame) OnLeaveMachine(uid UserID, hid HallID, gameCode GameCode) json.RawMessage {
-	url := g.generateURL(MachineLeave, uid, hid, gameCode)
+	url := g.generateURL(MachineLeave, uid, hid, g.gameCode)
 
 	return g.call(url)
 }

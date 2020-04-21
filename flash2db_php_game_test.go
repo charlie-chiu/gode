@@ -43,21 +43,21 @@ func TestFlash2dbPhpGame(t *testing.T) {
 		gamePath := "/casino.slot.line243.BuBuGaoSheng."
 		phpFunctionName := "machineOccupyAuto"
 		expectedURL := fmt.Sprintf("%s%s%s/%d", PathPrefix, gamePath, phpFunctionName, userID)
-		srv := NewTestingServer(t, expectedURL, `{"action":"onTakeMachine"}`)
+		srv := NewTestingServer(t, expectedURL, `{"event":true,"data":{"event":true,"GameCode":43}}`)
 		defer srv.Close()
 
 		g, err := NewFlash2dbPhpGame(srv.URL, 5145)
 
 		assertNoError(t, err)
 
-		want := []byte(`{"action":"onTakeMachine"}`)
+		want := []byte(`{"event":true,"data":{"event":true,"GameCode":43}}`)
 		got := g.OnTakeMachine(userID)
 		assertByteEqual(t, got, want)
 	})
 
 	t.Run("onLoadInfo get correct url and return result", func(t *testing.T) {
 		var userID UserID = 362907402
-		var gameCode GameCode = 1
+		var gameCode GameCode = 0
 		gamePath := "/casino.slot.line243.BuBuGaoSheng."
 		phpFunctionName := "onLoadInfo"
 		expectedURL := fmt.Sprintf("%s%s%s/%d/%d", PathPrefix, gamePath, phpFunctionName, userID, gameCode)
@@ -77,7 +77,7 @@ func TestFlash2dbPhpGame(t *testing.T) {
 	t.Run("getMachineDetail get correct url and return result", func(t *testing.T) {
 
 		var userID UserID = 362907402
-		var gameCode GameCode = 1
+		var gameCode GameCode = 0
 		gamePath := "/casino.slot.line243.BuBuGaoSheng."
 		phpFunctionName := "getMachineDetail"
 		expectedURL := fmt.Sprintf("%s%s%s/%d/%d", PathPrefix, gamePath, phpFunctionName, userID, gameCode)
@@ -96,10 +96,10 @@ func TestFlash2dbPhpGame(t *testing.T) {
 
 	t.Run("creditExchange get correct url and return result", func(t *testing.T) {
 		var sid SessionID = "sidSid123"
-		var gameCode GameCode = 56
+		var gameCode GameCode = 0
 		var betBase string = "1:5"
 		var credit int = 1000
-		expectedURL := `/amfphp/json.php/casino.slot.line243.BuBuGaoSheng.creditExchange/sidSid123/56/1:5/1000`
+		expectedURL := `/amfphp/json.php/casino.slot.line243.BuBuGaoSheng.creditExchange/sidSid123/0/1:5/1000`
 
 		srv := NewTestingServer(t, expectedURL, `credit`)
 		defer srv.Close()
@@ -115,9 +115,9 @@ func TestFlash2dbPhpGame(t *testing.T) {
 
 	t.Run("beginGame get correct url and return result", func(t *testing.T) {
 		var sid SessionID = "sidSid123"
-		var gameCode GameCode = 56
+		var gameCode GameCode = 0
 		var betInfo string = `{"BetLevel":1}`
-		expectedURL := `/amfphp/json.php/casino.slot.line243.BuBuGaoSheng.beginGame/sidSid123/56/{"BetLevel":1}`
+		expectedURL := `/amfphp/json.php/casino.slot.line243.BuBuGaoSheng.beginGame/sidSid123/0/{"BetLevel":1}`
 
 		srv := NewTestingServer(t, expectedURL, `begin`)
 		defer srv.Close()
@@ -133,9 +133,9 @@ func TestFlash2dbPhpGame(t *testing.T) {
 
 	t.Run("balanceExchange get correct url and return result", func(t *testing.T) {
 		var userID UserID = 362907402
-		var gameCode GameCode = 1
+		var gameCode GameCode = 0
 		var hallID HallID = 6
-		expectedURL := `/amfphp/json.php/casino.slot.line243.BuBuGaoSheng.balanceExchange/362907402/6/1`
+		expectedURL := `/amfphp/json.php/casino.slot.line243.BuBuGaoSheng.balanceExchange/362907402/6/0`
 
 		srv := NewTestingServer(t, expectedURL, `balance`)
 		defer srv.Close()
@@ -153,7 +153,7 @@ func TestFlash2dbPhpGame(t *testing.T) {
 		var userID UserID = 362907402
 		var gameCode GameCode = 1
 		var hallID HallID = 6
-		expectedURL := `/amfphp/json.php/casino.slot.line243.BuBuGaoSheng.machineLeave/362907402/6/1`
+		expectedURL := `/amfphp/json.php/casino.slot.line243.BuBuGaoSheng.machineLeave/362907402/6/0`
 
 		srv := NewTestingServer(t, expectedURL, `leave`)
 		defer srv.Close()
