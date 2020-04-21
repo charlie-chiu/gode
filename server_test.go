@@ -50,10 +50,27 @@ func (s StubPhpGame) OnLeaveMachine(uid gode.UserID, hid gode.HallID, gameCode g
 	return json.RawMessage(s.LeaveMachineResult)
 }
 
+type StubClient struct {
+	UID gode.UserID
+	HID gode.HallID
+	SID gode.SessionID
+}
+
+func (c StubClient) UserID() gode.UserID {
+	return c.UID
+}
+func (c StubClient) HallID() gode.HallID {
+	return c.HID
+}
+func (c StubClient) SessionID() gode.SessionID {
+	return c.SID
+}
+
 func TestWebSocketGame(t *testing.T) {
 	const timeOut = time.Second
 
 	t.Run("/ws/game can process game", func(t *testing.T) {
+		stubClient := &StubClient{}
 		stubGame := StubPhpGame{
 			LoadInfoResult:         `{"event":"LoadInfo"}`,
 			TakeMachineResult:      `{"event":"TakeMachine"}`,
@@ -63,7 +80,7 @@ func TestWebSocketGame(t *testing.T) {
 			CreditExchangeResult:   `{"event":"CreditExchange"}`,
 			LeaveMachineResult:     `{"event":"LeaveMachine"}`,
 		}
-		server := httptest.NewServer(gode.NewServer(stubGame))
+		server := httptest.NewServer(gode.NewServer(stubClient, stubGame))
 		url := makeWebSocketURL(server, "/ws/game")
 		wsClient := mustDialWS(t, url)
 		defer server.Close()
@@ -161,8 +178,9 @@ func makeWebSocketURL(server *httptest.Server, path string) string {
 
 func TestGet(t *testing.T) {
 	t.Run("/ returns 404", func(t *testing.T) {
+		stubClient := &StubClient{}
 		stubGame := StubPhpGame{}
-		server := gode.NewServer(stubGame)
+		server := gode.NewServer(stubClient, stubGame)
 
 		request, _ := http.NewRequest(http.MethodGet, "/", nil)
 		responseRecorder := httptest.NewRecorder()

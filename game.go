@@ -28,9 +28,6 @@ type Game interface {
 }
 
 type (
-	SessionID string
-	GameType  int
-	GameCode  int
-	UserID    int
-	HallID    int
+	GameType int
+	GameCode int
 )

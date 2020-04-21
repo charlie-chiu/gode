@@ -8,7 +8,8 @@ import (
 
 type Server struct {
 	http.Handler
-	g Game
+	g      Game
+	client Client
 }
 
 const (
@@ -25,9 +26,10 @@ const (
 	ServerReady = "ready"
 )
 
-func NewServer(g Game) *Server {
+func NewServer(c Client, g Game) *Server {
 	server := new(Server)
 	server.g = g
+	server.client = c
 
 	router := http.NewServeMux()
 	router.Handle("/ws/game", http.HandlerFunc(server.gameHandler))
@@ -91,13 +93,13 @@ func (s *Server) handleMessage(ws *wsServer, msg []byte) {
 	}
 
 	var (
-		sid      SessionID = "b285306cc11c53d9877791427f892d87354bb8a8"
-		uid      UserID    = 455648515
-		hid      HallID    = 6
-		gameCode GameCode  = 36
-		bet      string    = `{"BetLevel":1}`
-		betBase  string    = "1:1"
-		credit   int       = 1000
+		sid               = s.client.SessionID()
+		uid               = s.client.UserID()
+		hid               = s.client.HallID()
+		gameCode GameCode = 55
+		bet               = `{"BetLevel":1}`
+		betBase           = "1:1"
+		credit            = 1000
 	)
 
 	switch data.Action {
