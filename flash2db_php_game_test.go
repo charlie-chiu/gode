@@ -9,7 +9,7 @@ import (
 
 func TestInternalValue(t *testing.T) {
 	t.Run("storage GameCode after take machine", func(t *testing.T) {
-		response := string(`{"event":true,"data":{"event":true,"GameCode":43}}`)
+		response := `{"event":true,"data":{"event":true,"GameCode":43}}`
 		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprint(w, response)
 		})
@@ -43,15 +43,14 @@ func TestFlash2dbPhpGame(t *testing.T) {
 		gamePath := "/casino.slot.line243.BuBuGaoSheng."
 		phpFunctionName := "machineOccupyAuto"
 		expectedURL := fmt.Sprintf("%s%s%s/%d", PathPrefix, gamePath, phpFunctionName, userID)
-
-		srv := NewTestingServer(t, expectedURL, `{OnTakeMachine}`)
+		srv := NewTestingServer(t, expectedURL, `{"action":"onTakeMachine"}`)
 		defer srv.Close()
 
 		g, err := NewFlash2dbPhpGame(srv.URL, 5145)
 
 		assertNoError(t, err)
 
-		want := []byte(`{OnTakeMachine}`)
+		want := []byte(`{"action":"onTakeMachine"}`)
 		got := g.OnTakeMachine(userID)
 		assertByteEqual(t, got, want)
 	})
