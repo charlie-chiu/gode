@@ -7,7 +7,13 @@ import (
 	"testing"
 )
 
-func TestInternalValue(t *testing.T) {
+func TestFlash2dbPhpGame(t *testing.T) {
+	t.Run("constructor return an error when game path not exist", func(t *testing.T) {
+		dummyURL := "127.0.0.1"
+		_, err := NewFlash2dbPhpGame(dummyURL, 99888)
+		assertError(t, err)
+	})
+
 	t.Run("storage GameCode after take machine", func(t *testing.T) {
 		response := `{"event":true,"data":{"event":true,"GameCode":43}}`
 		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -31,18 +37,9 @@ func TestInternalValue(t *testing.T) {
 	})
 }
 
-func TestFlash2dbPhpGame(t *testing.T) {
-	t.Run("constructor should return an error when game path not exist", func(t *testing.T) {
-		dummyURL := "127.0.0.1"
-		_, err := NewFlash2dbPhpGame(dummyURL, 99888)
-		assertError(t, err)
-	})
-
+func TestProcess(t *testing.T) {
 	t.Run("OnTakeMachine get correct url and return result", func(t *testing.T) {
-		var userID UserID = 362907402
-		gamePath := "/casino.slot.line243.BuBuGaoSheng."
-		phpFunctionName := "machineOccupyAuto"
-		expectedURL := fmt.Sprintf("%s%s%s/%d", PathPrefix, gamePath, phpFunctionName, userID)
+		expectedURL := PathPrefix + `/casino.slot.line243.BuBuGaoSheng.machineOccupyAuto/362907402`
 		srv := NewTestingServer(t, expectedURL, `{"event":true,"data":{"event":true,"GameCode":43}}`)
 		defer srv.Close()
 
@@ -51,26 +48,26 @@ func TestFlash2dbPhpGame(t *testing.T) {
 		assertNoError(t, err)
 
 		want := []byte(`{"event":true,"data":{"event":true,"GameCode":43}}`)
-		got := g.OnTakeMachine(userID)
+		got := g.OnTakeMachine(UserID(362907402))
 		assertByteEqual(t, got, want)
 	})
 
 	t.Run("onLoadInfo get correct url and return result", func(t *testing.T) {
 		var userID UserID = 362907402
-		var gameCode GameCode = 0
+		var expectedGameCode GameCode = 466
 		gamePath := "/casino.slot.line243.BuBuGaoSheng."
 		phpFunctionName := "onLoadInfo"
-		expectedURL := fmt.Sprintf("%s%s%s/%d/%d", PathPrefix, gamePath, phpFunctionName, userID, gameCode)
+		expectedURL := fmt.Sprintf("%s%s%s/%d/%d", PathPrefix, gamePath, phpFunctionName, userID, expectedGameCode)
 
 		srv := NewTestingServer(t, expectedURL, `onLoadInfo`)
 		defer srv.Close()
 
 		g, err := NewFlash2dbPhpGame(srv.URL, 5145)
-
+		g.gameCode = expectedGameCode
 		assertNoError(t, err)
 
 		want := []byte(`onLoadInfo`)
-		got := g.OnLoadInfo(userID, gameCode)
+		got := g.OnLoadInfo(userID, expectedGameCode)
 		assertByteEqual(t, got, want)
 	})
 
