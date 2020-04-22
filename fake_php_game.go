@@ -18,7 +18,7 @@ type result struct {
 	Data  map[string]interface{} `json:"data"`
 }
 
-func (g FakePhpGame) OnTakeMachine(uid UserID) json.RawMessage {
+func (g FakePhpGame) TakeMachine(uid UserID) json.RawMessage {
 	r := &response{
 		Action: "onTakeMachine",
 		Result: result{
@@ -40,7 +40,7 @@ func (g FakePhpGame) OnLoadInfo(uid UserID) json.RawMessage {
 	return json.RawMessage(msg)
 }
 
-func (g FakePhpGame) OnGetMachineDetail(uid UserID) json.RawMessage {
+func (g FakePhpGame) GetMachineDetail(uid UserID) json.RawMessage {
 	r := &response{
 		Action: "onGetMachineDetail",
 		Result: result{
@@ -86,16 +86,16 @@ func (g FakePhpGame) BeginGame(sid SessionID, betInfo string) json.RawMessage {
 	}
 }
 
-func (g FakePhpGame) OnCreditExchange(sid SessionID, bb string, credit int) json.RawMessage {
+func (g FakePhpGame) CreditExchange(sid SessionID, bb string, credit int) json.RawMessage {
 	msg := `{"action":"onCreditExchange","result":{"data":{"Balance":99949999.99,"BetBase":"1:1","Credit":100,"event":true},"event":true}}`
 	return json.RawMessage(msg)
 }
 
-func (g FakePhpGame) OnBalanceExchange(uid UserID, hid HallID) json.RawMessage {
+func (g FakePhpGame) BalanceExchange(uid UserID, hid HallID) json.RawMessage {
 	msg := `{"action":"onBalanceExchange","result":{"data":{"Amount":50000,"Balance":9999999.99,"BetBase":"","ErrorID":1354000000,"TransCredit":"0.00","event":true},"event":true}}`
 	return json.RawMessage(msg)
 }
 
-func (g FakePhpGame) OnLeaveMachine(uid UserID, hid HallID) json.RawMessage {
+func (g FakePhpGame) LeaveMachine(uid UserID, hid HallID) json.RawMessage {
 	panic("implement me")
 }

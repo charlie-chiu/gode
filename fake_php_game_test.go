@@ -33,7 +33,7 @@ func TestFakePhpGame(t *testing.T) {
 		}
 		got := &response{}
 
-		unmarshalJSON(t, game.OnTakeMachine(uid), got)
+		unmarshalJSON(t, game.TakeMachine(uid), got)
 		assertJSONEqual(t, want, got)
 	})
 
@@ -75,21 +75,21 @@ func TestFakePhpGame(t *testing.T) {
 		}
 		got := &response{}
 
-		unmarshalJSON(t, game.OnGetMachineDetail(uid), got)
+		unmarshalJSON(t, game.GetMachineDetail(uid), got)
 		assertJSONEqual(t, want, got)
 	})
 
 	t.Run("onCreditExchange", func(t *testing.T) {
 		g := &FakePhpGame{}
 		want := `{"action":"onCreditExchange","result":{"data":{"Balance":99949999.99,"BetBase":"1:1","Credit":100,"event":true},"event":true}}`
-		got := g.OnCreditExchange(sid, betBase, credit)
+		got := g.CreditExchange(sid, betBase, credit)
 		assertByteEqual(t, got, []byte(want))
 	})
 
 	t.Run("onBalanceExchange", func(t *testing.T) {
 		g := &FakePhpGame{}
 		want := `{"action":"onBalanceExchange","result":{"data":{"Amount":50000,"Balance":9999999.99,"BetBase":"","ErrorID":1354000000,"TransCredit":"0.00","event":true},"event":true}}`
-		got := g.OnBalanceExchange(uid, hid)
+		got := g.BalanceExchange(uid, hid)
 		assertByteEqual(t, got, []byte(want))
 	})
 }

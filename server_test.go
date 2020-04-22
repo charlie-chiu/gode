@@ -25,26 +25,26 @@ type StubPhpGame struct {
 	LeaveMachineCalled    bool
 }
 
-func (s *StubPhpGame) OnTakeMachine(uid gode.UserID) json.RawMessage {
+func (s *StubPhpGame) TakeMachine(uid gode.UserID) json.RawMessage {
 	return json.RawMessage(s.TakeMachineResult)
 }
 func (s *StubPhpGame) OnLoadInfo(uid gode.UserID) json.RawMessage {
 	return json.RawMessage(s.LoadInfoResult)
 }
-func (s *StubPhpGame) OnGetMachineDetail(uid gode.UserID) json.RawMessage {
+func (s *StubPhpGame) GetMachineDetail(uid gode.UserID) json.RawMessage {
 	return json.RawMessage(s.GetMachineDetailResult)
 }
-func (s *StubPhpGame) OnCreditExchange(sid gode.SessionID, bb string, credit int) json.RawMessage {
+func (s *StubPhpGame) CreditExchange(sid gode.SessionID, bb string, credit int) json.RawMessage {
 	return json.RawMessage(s.CreditExchangeResult)
 }
-func (s *StubPhpGame) OnBalanceExchange(uid gode.UserID, hid gode.HallID) json.RawMessage {
+func (s *StubPhpGame) BalanceExchange(uid gode.UserID, hid gode.HallID) json.RawMessage {
 	s.BalanceExchangeCalled = true
 	return json.RawMessage(s.BalanceExchangeResult)
 }
 func (s *StubPhpGame) BeginGame(sid gode.SessionID, betInfo string) json.RawMessage {
 	return json.RawMessage(s.BeginGameResult)
 }
-func (s *StubPhpGame) OnLeaveMachine(uid gode.UserID, hid gode.HallID) json.RawMessage {
+func (s *StubPhpGame) LeaveMachine(uid gode.UserID, hid gode.HallID) json.RawMessage {
 	s.LeaveMachineCalled = true
 	return json.RawMessage(s.LeaveMachineResult)
 }

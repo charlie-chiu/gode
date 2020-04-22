@@ -29,7 +29,7 @@ func TestFlash2dbPhpGame(t *testing.T) {
 
 	const PathPrefix = "/amfphp/json.php"
 
-	t.Run("OnTakeMachine get correct url and return result", func(t *testing.T) {
+	t.Run("TakeMachine get correct url and return result", func(t *testing.T) {
 		expectedURL := PathPrefix + `/casino.slot.line243.BuBuGaoSheng.machineOccupyAuto/362907402`
 		srv := NewTestingServer(t, expectedURL, `{"event":true,"data":{"event":true,"GameCode":43}}`)
 		defer srv.Close()
@@ -38,7 +38,7 @@ func TestFlash2dbPhpGame(t *testing.T) {
 		assertNoError(t, err)
 
 		want := json.RawMessage(`{"event":true,"data":{"event":true,"GameCode":43}}`)
-		got := g.OnTakeMachine(362907402)
+		got := g.TakeMachine(362907402)
 		assertRawJSONEqual(t, got, want)
 	})
 
@@ -50,13 +50,13 @@ func TestFlash2dbPhpGame(t *testing.T) {
 		UserID := gode.UserID(111)
 		hid := gode.HallID(6)
 		sid := gode.SessionID(`SessionID466`)
-		g.OnTakeMachine(UserID)
+		g.TakeMachine(UserID)
 		g.OnLoadInfo(UserID)
-		g.OnGetMachineDetail(UserID)
-		g.OnCreditExchange(sid, "1:1", 1000)
+		g.GetMachineDetail(UserID)
+		g.CreditExchange(sid, "1:1", 1000)
 		g.BeginGame(sid, `{"BetLevel":1}`)
-		g.OnBalanceExchange(UserID, hid)
-		g.OnLeaveMachine(UserID, hid)
+		g.BalanceExchange(UserID, hid)
+		g.LeaveMachine(UserID, hid)
 
 		const Prefix = "/amfphp/json.php/casino.slot.line243.BuBuGaoSheng."
 		expectedURLs := []string{
@@ -93,7 +93,7 @@ func TestFlash2dbPhpGame(t *testing.T) {
 		assertNoError(t, err)
 
 		want := []byte(`getMachineDetail`)
-		got := g.OnGetMachineDetail(userID)
+		got := g.GetMachineDetail(userID)
 		assertRawJSONEqual(t, got, want)
 	})
 
@@ -111,7 +111,7 @@ func TestFlash2dbPhpGame(t *testing.T) {
 		assertNoError(t, err)
 
 		want := []byte(`credit`)
-		got := g.OnCreditExchange(sid, betBase, credit)
+		got := g.CreditExchange(sid, betBase, credit)
 		assertRawJSONEqual(t, got, want)
 	})
 
@@ -145,7 +145,7 @@ func TestFlash2dbPhpGame(t *testing.T) {
 		assertNoError(t, err)
 
 		want := []byte(`balance`)
-		got := g.OnBalanceExchange(userID, hallID)
+		got := g.BalanceExchange(userID, hallID)
 		assertRawJSONEqual(t, got, want)
 	})
 
@@ -162,7 +162,7 @@ func TestFlash2dbPhpGame(t *testing.T) {
 		assertNoError(t, err)
 
 		want := []byte(`leave`)
-		got := g.OnLeaveMachine(userID, hallID)
+		got := g.LeaveMachine(userID, hallID)
 		assertRawJSONEqual(t, got, want)
 	})
 }

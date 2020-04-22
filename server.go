@@ -79,8 +79,8 @@ func (s *Server) gameHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleDisconnect() {
 	uid := s.client.UserID()
 	hid := s.client.HallID()
-	s.game.OnBalanceExchange(uid, hid)
-	s.game.OnLeaveMachine(uid, hid)
+	s.game.BalanceExchange(uid, hid)
+	s.game.LeaveMachine(uid, hid)
 }
 
 func (s *Server) handleMessage(ws *wsServer, msg []byte) {
@@ -103,21 +103,21 @@ func (s *Server) handleMessage(ws *wsServer, msg []byte) {
 	case ClientLogin:
 		const loginResult = `{"event":true,"data":{"COID":2688,"ExchangeRate":1,"GameID":0,"HallID":6,"Sid":"","Test":1,"UserID":0}}`
 		ws.writeBinaryMsg(s.makeSendJSON(ServerLogin, []byte(loginResult)))
-		ws.writeBinaryMsg(s.makeSendJSON("onTakeMachine", s.game.OnTakeMachine(uid)))
+		ws.writeBinaryMsg(s.makeSendJSON("onTakeMachine", s.game.TakeMachine(uid)))
 	case ClientOnLoadInfo:
 		msg := s.makeSendJSON("onOnLoadInfo2", s.game.OnLoadInfo(uid))
 		ws.writeBinaryMsg(msg)
 	case ClientGetMachineDetail:
-		msg := s.makeSendJSON("onGetMachineDetail", s.game.OnGetMachineDetail(uid))
+		msg := s.makeSendJSON("onGetMachineDetail", s.game.GetMachineDetail(uid))
 		ws.writeBinaryMsg(msg)
 	case ClientBeginGame:
 		msg := s.makeSendJSON("onBeginGame", s.game.BeginGame(sid, bet))
 		ws.writeBinaryMsg(msg)
 	case ClientExchangeCredit:
-		msg := s.makeSendJSON("onCreditExchange", s.game.OnCreditExchange(sid, betBase, credit))
+		msg := s.makeSendJSON("onCreditExchange", s.game.CreditExchange(sid, betBase, credit))
 		ws.writeBinaryMsg(msg)
 	case ClientExchangeBalance:
-		msg := s.makeSendJSON("onBalanceExchange", s.game.OnBalanceExchange(uid, hid))
+		msg := s.makeSendJSON("onBalanceExchange", s.game.BalanceExchange(uid, hid))
 		ws.writeBinaryMsg(msg)
 	}
 }
