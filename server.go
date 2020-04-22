@@ -59,11 +59,28 @@ func (s *Server) gameHandler(w http.ResponseWriter, r *http.Request) {
 	wsMsg := make(chan []byte)
 	go ws.listenJSON(wsMsg)
 	for {
+		closed := false
 		select {
-		case msg := <-wsMsg:
-			s.handleMessage(ws, msg)
+		case msg, ok := <-wsMsg:
+			if ok {
+				s.handleMessage(ws, msg)
+			} else {
+				s.handleDisconnect()
+				closed = true
+			}
+		}
+
+		if closed {
+			break
 		}
 	}
+}
+
+func (s *Server) handleDisconnect() {
+	uid := s.client.UserID()
+	hid := s.client.HallID()
+	s.game.OnBalanceExchange(uid, hid, 0)
+	s.game.OnLeaveMachine(uid, hid, 0)
 }
 
 func (s *Server) handleMessage(ws *wsServer, msg []byte) {

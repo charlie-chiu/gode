@@ -20,27 +20,32 @@ type StubPhpGame struct {
 	BalanceExchangeResult  string
 	CreditExchangeResult   string
 	LeaveMachineResult     string
+
+	BalanceExchangeCalled bool
+	LeaveMachineCalled    bool
 }
 
-func (s StubPhpGame) OnTakeMachine(uid gode.UserID) json.RawMessage {
+func (s *StubPhpGame) OnTakeMachine(uid gode.UserID) json.RawMessage {
 	return json.RawMessage(s.TakeMachineResult)
 }
-func (s StubPhpGame) OnLoadInfo(uid gode.UserID, gc gode.GameCode) json.RawMessage {
+func (s *StubPhpGame) OnLoadInfo(uid gode.UserID, gc gode.GameCode) json.RawMessage {
 	return json.RawMessage(s.LoadInfoResult)
 }
-func (s StubPhpGame) OnGetMachineDetail(uid gode.UserID, gc gode.GameCode) json.RawMessage {
+func (s *StubPhpGame) OnGetMachineDetail(uid gode.UserID, gc gode.GameCode) json.RawMessage {
 	return json.RawMessage(s.GetMachineDetailResult)
 }
-func (s StubPhpGame) OnCreditExchange(sid gode.SessionID, gc gode.GameCode, bb string, credit int) json.RawMessage {
+func (s *StubPhpGame) OnCreditExchange(sid gode.SessionID, gc gode.GameCode, bb string, credit int) json.RawMessage {
 	return json.RawMessage(s.CreditExchangeResult)
 }
-func (s StubPhpGame) OnBalanceExchange(uid gode.UserID, hid gode.HallID, gc gode.GameCode) json.RawMessage {
+func (s *StubPhpGame) OnBalanceExchange(uid gode.UserID, hid gode.HallID, gc gode.GameCode) json.RawMessage {
+	s.BalanceExchangeCalled = true
 	return json.RawMessage(s.BalanceExchangeResult)
 }
-func (s StubPhpGame) BeginGame(sid gode.SessionID, gc gode.GameCode, betInfo string) json.RawMessage {
+func (s *StubPhpGame) BeginGame(sid gode.SessionID, gc gode.GameCode, betInfo string) json.RawMessage {
 	return json.RawMessage(s.BeginGameResult)
 }
-func (s StubPhpGame) OnLeaveMachine(uid gode.UserID, hid gode.HallID, gameCode gode.GameCode) json.RawMessage {
+func (s *StubPhpGame) OnLeaveMachine(uid gode.UserID, hid gode.HallID, gameCode gode.GameCode) json.RawMessage {
+	s.LeaveMachineCalled = true
 	return json.RawMessage(s.LeaveMachineResult)
 }
 
@@ -65,7 +70,7 @@ func TestWebSocketGame(t *testing.T) {
 
 	t.Run("/ws/game can process game", func(t *testing.T) {
 		stubClient := &StubClient{}
-		stubGame := StubPhpGame{
+		stubGame := &StubPhpGame{
 			LoadInfoResult:         `{"event":"LoadInfo"}`,
 			TakeMachineResult:      `{"event":"TakeMachine"}`,
 			GetMachineDetailResult: `{"event":"MachineDetail"}`,
@@ -113,6 +118,35 @@ func TestWebSocketGame(t *testing.T) {
 		if err != nil {
 			t.Errorf("problem closing dialer %v", err)
 		}
+	})
+
+	t.Run("should call leaveMachine when ws disconnect", func(t *testing.T) {
+		stubClient := &StubClient{}
+		stubGame := &StubPhpGame{
+			LoadInfoResult:     `{"event":"LoadInfo"}`,
+			TakeMachineResult:  `{"event":"TakeMachine"}`,
+			LeaveMachineCalled: false,
+		}
+		svr := httptest.NewServer(gode.NewServer(stubClient, stubGame))
+		url := makeWebSocketURL(svr, "/ws/game")
+		wsClient := mustDialWS(t, url)
+		defer svr.Close()
+
+		//ready
+		assertWSReceiveBinaryMsg(t, wsClient, `{"action":"ready","result":{"event":true,"data":null}}`)
+
+		//ClientLogin
+		writeBinaryMsg(t, wsClient, `{"action":"loginBySid","sid":"21d9b36e42c8275a4359f6815b859df05ec2bb0a"}`)
+
+		_ = wsClient.Close()
+		time.Sleep(1 * time.Millisecond)
+		if !stubGame.LeaveMachineCalled {
+			t.Error("expected game.LeaveMachine called but not")
+		}
+		if !stubGame.BalanceExchangeCalled {
+			t.Error("expected game.BalanceExchange called but not")
+		}
+
 	})
 }
 
@@ -173,7 +207,7 @@ func makeWebSocketURL(server *httptest.Server, path string) string {
 func TestGet(t *testing.T) {
 	t.Run("/ returns 404", func(t *testing.T) {
 		stubClient := &StubClient{}
-		stubGame := StubPhpGame{}
+		stubGame := &StubPhpGame{}
 		server := gode.NewServer(stubClient, stubGame)
 
 		request, _ := http.NewRequest(http.MethodGet, "/", nil)
