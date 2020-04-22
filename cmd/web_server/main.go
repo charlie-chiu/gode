@@ -11,7 +11,7 @@ import (
 func main() {
 	client := gode.FakeClient{
 		UID: 362907402, //dev angel888
-		HID: 6,
+		HID: 32,
 		SID: gode.SessionID("197af9c6341e4f846d6defe4da1aaf0489dc15d5"),
 	}
 	game, err := gode.NewFlash2dbPhpGame("http://103.241.238.141/", 5145)
