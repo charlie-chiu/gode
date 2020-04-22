@@ -1,80 +1,87 @@
-package gode
+package gode_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
+
+	"github.com/charlie-chiu/gode"
 )
+
+type SpyHandler struct {
+	requestedURL []string
+}
+
+func (h *SpyHandler) spy(w http.ResponseWriter, r *http.Request) {
+	h.requestedURL = append(h.requestedURL, r.URL.Path)
+	fmt.Fprint(w, `{"event":true,"data":{"event":true,"GameCode":43}}`)
+}
 
 func TestFlash2dbPhpGame(t *testing.T) {
 	t.Run("constructor return an error when game path not exist", func(t *testing.T) {
 		dummyURL := "127.0.0.1"
-		_, err := NewFlash2dbPhpGame(dummyURL, 99888)
+		_, err := gode.NewFlash2dbPhpGame(dummyURL, 99888)
 		assertError(t, err)
 	})
 
-	t.Run("storage GameCode after take machine", func(t *testing.T) {
-		response := `{"event":true,"data":{"event":true,"GameCode":43}}`
-		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, response)
-		})
-		svr := httptest.NewServer(handler)
-		game, _ := NewFlash2dbPhpGame(svr.URL, 5145)
-		want := GameCode(0)
-		got := game.gameCode
-		if got != want {
-			t.Errorf("game code zero value error, got %d, want %d", gameCode, want)
-		}
-		dummyUserID := UserID(0)
-		game.OnTakeMachine(dummyUserID)
+	const PathPrefix = "/amfphp/json.php"
 
-		want = GameCode(43)
-		got = game.gameCode
-		if got != want {
-			t.Errorf("game code zero value error, got %d, want %d", gameCode, want)
-		}
-	})
-}
-
-func TestProcess(t *testing.T) {
 	t.Run("OnTakeMachine get correct url and return result", func(t *testing.T) {
 		expectedURL := PathPrefix + `/casino.slot.line243.BuBuGaoSheng.machineOccupyAuto/362907402`
 		srv := NewTestingServer(t, expectedURL, `{"event":true,"data":{"event":true,"GameCode":43}}`)
 		defer srv.Close()
 
-		g, err := NewFlash2dbPhpGame(srv.URL, 5145)
-
+		g, err := gode.NewFlash2dbPhpGame(srv.URL, 5145)
 		assertNoError(t, err)
 
-		want := []byte(`{"event":true,"data":{"event":true,"GameCode":43}}`)
-		got := g.OnTakeMachine(UserID(362907402))
-		assertByteEqual(t, got, want)
+		want := json.RawMessage(`{"event":true,"data":{"event":true,"GameCode":43}}`)
+		got := g.OnTakeMachine(362907402)
+		assertRawJSONEqual(t, got, want)
 	})
 
-	t.Run("onLoadInfo get correct url and return result", func(t *testing.T) {
-		var userID UserID = 362907402
-		var expectedGameCode GameCode = 466
-		gamePath := "/casino.slot.line243.BuBuGaoSheng."
-		phpFunctionName := "onLoadInfo"
-		expectedURL := fmt.Sprintf("%s%s%s/%d/%d", PathPrefix, gamePath, phpFunctionName, userID, expectedGameCode)
+	t.Run("will using game code after from take machine api", func(t *testing.T) {
+		spyHandler := &SpyHandler{}
+		svr := httptest.NewServer(http.HandlerFunc(spyHandler.spy))
+		g, _ := gode.NewFlash2dbPhpGame(svr.URL, 5145)
 
-		srv := NewTestingServer(t, expectedURL, `onLoadInfo`)
-		defer srv.Close()
+		UserID := gode.UserID(111)
+		hid := gode.HallID(6)
+		dummyGameCode := gode.GameCode(0)
+		sid := gode.SessionID(`SessionID466`)
+		g.OnTakeMachine(UserID)
+		g.OnLoadInfo(UserID, dummyGameCode)
+		g.OnGetMachineDetail(UserID, dummyGameCode)
+		g.OnCreditExchange(sid, dummyGameCode, "1:1", 1000)
+		g.BeginGame(sid, dummyGameCode, `{"BetLevel":1}`)
+		g.OnBalanceExchange(UserID, hid, dummyGameCode)
+		g.OnLeaveMachine(UserID, hid, dummyGameCode)
 
-		g, err := NewFlash2dbPhpGame(srv.URL, 5145)
-		g.gameCode = expectedGameCode
-		assertNoError(t, err)
+		const Prefix = "/amfphp/json.php/casino.slot.line243.BuBuGaoSheng."
+		expectedURLs := []string{
+			Prefix + `machineOccupyAuto/111`,
+			Prefix + `onLoadInfo/111/43`,
+			Prefix + `getMachineDetail/111/43`,
+			Prefix + `creditExchange/SessionID466/43/1:1/1000`,
+			Prefix + `beginGame/SessionID466/43/{"BetLevel":1}`,
+			Prefix + `balanceExchange/111/6/43`,
+			Prefix + `machineLeave/111/6/43`,
+		}
 
-		want := []byte(`onLoadInfo`)
-		got := g.OnLoadInfo(userID, expectedGameCode)
-		assertByteEqual(t, got, want)
+		// assert SUT called correct URL
+		if !reflect.DeepEqual(expectedURLs, spyHandler.requestedURL) {
+			fmt.Printf("expected: %v\n", expectedURLs)
+			fmt.Printf("     got: %v\n", spyHandler.requestedURL)
+			t.Errorf("URLs not match")
+		}
 	})
 
 	t.Run("getMachineDetail get correct url and return result", func(t *testing.T) {
 
-		var userID UserID = 362907402
-		var gameCode GameCode = 0
+		var userID gode.UserID = 362907402
+		var gameCode gode.GameCode = 0
 		gamePath := "/casino.slot.line243.BuBuGaoSheng."
 		phpFunctionName := "getMachineDetail"
 		expectedURL := fmt.Sprintf("%s%s%s/%d/%d", PathPrefix, gamePath, phpFunctionName, userID, gameCode)
@@ -82,18 +89,18 @@ func TestProcess(t *testing.T) {
 		srv := NewTestingServer(t, expectedURL, `getMachineDetail`)
 		defer srv.Close()
 
-		g, err := NewFlash2dbPhpGame(srv.URL, 5145)
+		g, err := gode.NewFlash2dbPhpGame(srv.URL, 5145)
 
 		assertNoError(t, err)
 
 		want := []byte(`getMachineDetail`)
 		got := g.OnGetMachineDetail(userID, gameCode)
-		assertByteEqual(t, got, want)
+		assertRawJSONEqual(t, got, want)
 	})
 
 	t.Run("creditExchange get correct url and return result", func(t *testing.T) {
-		var sid SessionID = "sidSid123"
-		var gameCode GameCode = 0
+		var sid gode.SessionID = "sidSid123"
+		var gameCode gode.GameCode = 0
 		var betBase string = "1:5"
 		var credit int = 1000
 		expectedURL := `/amfphp/json.php/casino.slot.line243.BuBuGaoSheng.creditExchange/sidSid123/0/1:5/1000`
@@ -101,67 +108,67 @@ func TestProcess(t *testing.T) {
 		srv := NewTestingServer(t, expectedURL, `credit`)
 		defer srv.Close()
 
-		g, err := NewFlash2dbPhpGame(srv.URL, 5145)
+		g, err := gode.NewFlash2dbPhpGame(srv.URL, 5145)
 
 		assertNoError(t, err)
 
 		want := []byte(`credit`)
 		got := g.OnCreditExchange(sid, gameCode, betBase, credit)
-		assertByteEqual(t, got, want)
+		assertRawJSONEqual(t, got, want)
 	})
 
 	t.Run("beginGame get correct url and return result", func(t *testing.T) {
-		var sid SessionID = "sidSid123"
-		var gameCode GameCode = 0
+		var sid gode.SessionID = "sidSid123"
+		var gameCode gode.GameCode = 0
 		var betInfo string = `{"BetLevel":1}`
 		expectedURL := `/amfphp/json.php/casino.slot.line243.BuBuGaoSheng.beginGame/sidSid123/0/{"BetLevel":1}`
 
 		srv := NewTestingServer(t, expectedURL, `begin`)
 		defer srv.Close()
 
-		g, err := NewFlash2dbPhpGame(srv.URL, 5145)
+		g, err := gode.NewFlash2dbPhpGame(srv.URL, 5145)
 
 		assertNoError(t, err)
 
 		want := []byte(`begin`)
 		got := g.BeginGame(sid, gameCode, betInfo)
-		assertByteEqual(t, got, want)
+		assertRawJSONEqual(t, got, want)
 	})
 
 	t.Run("balanceExchange get correct url and return result", func(t *testing.T) {
-		var userID UserID = 362907402
-		var gameCode GameCode = 0
-		var hallID HallID = 6
+		var userID gode.UserID = 362907402
+		var gameCode gode.GameCode = 0
+		var hallID gode.HallID = 6
 		expectedURL := `/amfphp/json.php/casino.slot.line243.BuBuGaoSheng.balanceExchange/362907402/6/0`
 
 		srv := NewTestingServer(t, expectedURL, `balance`)
 		defer srv.Close()
 
-		g, err := NewFlash2dbPhpGame(srv.URL, 5145)
+		g, err := gode.NewFlash2dbPhpGame(srv.URL, 5145)
 
 		assertNoError(t, err)
 
 		want := []byte(`balance`)
 		got := g.OnBalanceExchange(userID, hallID, gameCode)
-		assertByteEqual(t, got, want)
+		assertRawJSONEqual(t, got, want)
 	})
 
 	t.Run("machineLeave get correct url and return result", func(t *testing.T) {
-		var userID UserID = 362907402
-		var gameCode GameCode = 1
-		var hallID HallID = 6
+		var userID gode.UserID = 362907402
+		var gameCode gode.GameCode = 1
+		var hallID gode.HallID = 6
 		expectedURL := `/amfphp/json.php/casino.slot.line243.BuBuGaoSheng.machineLeave/362907402/6/0`
 
 		srv := NewTestingServer(t, expectedURL, `leave`)
 		defer srv.Close()
 
-		g, err := NewFlash2dbPhpGame(srv.URL, 5145)
+		g, err := gode.NewFlash2dbPhpGame(srv.URL, 5145)
 
 		assertNoError(t, err)
 
 		want := []byte(`leave`)
 		got := g.OnLeaveMachine(userID, hallID, gameCode)
-		assertByteEqual(t, got, want)
+		assertRawJSONEqual(t, got, want)
 	})
 }
 
@@ -171,25 +178,4 @@ func NewTestingServer(t *testing.T, expectedURL string, response string) *httpte
 		assertURLEqual(t, r, expectedURL)
 		fmt.Fprint(w, response)
 	}))
-}
-
-func assertError(t *testing.T, err error) {
-	t.Helper()
-	if err == nil {
-		t.Errorf("expect an error but not got one")
-	}
-}
-
-func assertNoError(t *testing.T, err error) {
-	t.Helper()
-	if err != nil {
-		t.Fatal("didn't expecting an error but got one", err)
-	}
-}
-
-func assertURLEqual(t *testing.T, r *http.Request, want string) {
-	t.Helper()
-	if r.URL.Path != want {
-		t.Errorf("URL not matched\n want %q\n, got %q", want, r.URL)
-	}
 }
