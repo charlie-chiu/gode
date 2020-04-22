@@ -79,8 +79,8 @@ func (s *Server) gameHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleDisconnect() {
 	uid := s.client.UserID()
 	hid := s.client.HallID()
-	s.game.OnBalanceExchange(uid, hid, 0)
-	s.game.OnLeaveMachine(uid, hid, 0)
+	s.game.OnBalanceExchange(uid, hid)
+	s.game.OnLeaveMachine(uid, hid)
 }
 
 func (s *Server) handleMessage(ws *wsServer, msg []byte) {
@@ -91,13 +91,12 @@ func (s *Server) handleMessage(ws *wsServer, msg []byte) {
 	}
 
 	var (
-		sid           = s.client.SessionID()
-		uid           = s.client.UserID()
-		hid           = s.client.HallID()
-		dummyGameCode = GameCode(0)
-		bet           = `{"BetLevel":1}`
-		betBase       = "1:1"
-		credit        = 1000
+		sid     = s.client.SessionID()
+		uid     = s.client.UserID()
+		hid     = s.client.HallID()
+		bet     = `{"BetLevel":1}`
+		betBase = "1:1"
+		credit  = 1000
 	)
 
 	switch data.Action {
@@ -106,19 +105,19 @@ func (s *Server) handleMessage(ws *wsServer, msg []byte) {
 		ws.writeBinaryMsg(s.makeSendJSON(ServerLogin, []byte(loginResult)))
 		ws.writeBinaryMsg(s.makeSendJSON("onTakeMachine", s.game.OnTakeMachine(uid)))
 	case ClientOnLoadInfo:
-		msg := s.makeSendJSON("onOnLoadInfo2", s.game.OnLoadInfo(uid, dummyGameCode))
+		msg := s.makeSendJSON("onOnLoadInfo2", s.game.OnLoadInfo(uid))
 		ws.writeBinaryMsg(msg)
 	case ClientGetMachineDetail:
-		msg := s.makeSendJSON("onGetMachineDetail", s.game.OnGetMachineDetail(uid, dummyGameCode))
+		msg := s.makeSendJSON("onGetMachineDetail", s.game.OnGetMachineDetail(uid))
 		ws.writeBinaryMsg(msg)
 	case ClientBeginGame:
-		msg := s.makeSendJSON("onBeginGame", s.game.BeginGame(sid, dummyGameCode, bet))
+		msg := s.makeSendJSON("onBeginGame", s.game.BeginGame(sid, bet))
 		ws.writeBinaryMsg(msg)
 	case ClientExchangeCredit:
-		msg := s.makeSendJSON("onCreditExchange", s.game.OnCreditExchange(sid, dummyGameCode, betBase, credit))
+		msg := s.makeSendJSON("onCreditExchange", s.game.OnCreditExchange(sid, betBase, credit))
 		ws.writeBinaryMsg(msg)
 	case ClientExchangeBalance:
-		msg := s.makeSendJSON("onBalanceExchange", s.game.OnBalanceExchange(uid, hid, dummyGameCode))
+		msg := s.makeSendJSON("onBalanceExchange", s.game.OnBalanceExchange(uid, hid))
 		ws.writeBinaryMsg(msg)
 	}
 }

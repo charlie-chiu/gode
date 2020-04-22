@@ -9,22 +9,22 @@ type Game interface {
 	OnTakeMachine(uid UserID) json.RawMessage
 
 	//onLoadInfo($_iUserID, $_iGameCode)
-	OnLoadInfo(uid UserID, gc GameCode) json.RawMessage
+	OnLoadInfo(uid UserID) json.RawMessage
 
 	//getMachineDetail($_iUserID, $_iGameCode)
-	OnGetMachineDetail(uid UserID, gc GameCode) json.RawMessage
+	OnGetMachineDetail(uid UserID) json.RawMessage
 
 	//creditExchange($_sSid, $_iGameCode, $_sBetBase, $_iCredit)
-	OnCreditExchange(sid SessionID, gc GameCode, bb string, credit int) json.RawMessage
+	OnCreditExchange(sid SessionID, bb string, credit int) json.RawMessage
 
 	//balanceExchange($_iUserID, $_iHallID, $_iGameCode)
-	OnBalanceExchange(uid UserID, hid HallID, gc GameCode) json.RawMessage
+	OnBalanceExchange(uid UserID, hid HallID) json.RawMessage
 
 	//beginGame($_sSid, $_iGameCode, $_aBetInfo, $_iPlatform = null, $_iClient = 0, $_sOrderIp = null)
-	BeginGame(sid SessionID, gc GameCode, betInfo string) json.RawMessage
+	BeginGame(sid SessionID, betInfo string) json.RawMessage
 
 	//machineLeave($_iUserID, $_iHallID, $_iGameCode)
-	OnLeaveMachine(uid UserID, hid HallID, gameCode GameCode) json.RawMessage
+	OnLeaveMachine(uid UserID, hid HallID) json.RawMessage
 }
 
 type (

@@ -49,15 +49,14 @@ func TestFlash2dbPhpGame(t *testing.T) {
 
 		UserID := gode.UserID(111)
 		hid := gode.HallID(6)
-		dummyGameCode := gode.GameCode(0)
 		sid := gode.SessionID(`SessionID466`)
 		g.OnTakeMachine(UserID)
-		g.OnLoadInfo(UserID, dummyGameCode)
-		g.OnGetMachineDetail(UserID, dummyGameCode)
-		g.OnCreditExchange(sid, dummyGameCode, "1:1", 1000)
-		g.BeginGame(sid, dummyGameCode, `{"BetLevel":1}`)
-		g.OnBalanceExchange(UserID, hid, dummyGameCode)
-		g.OnLeaveMachine(UserID, hid, dummyGameCode)
+		g.OnLoadInfo(UserID)
+		g.OnGetMachineDetail(UserID)
+		g.OnCreditExchange(sid, "1:1", 1000)
+		g.BeginGame(sid, `{"BetLevel":1}`)
+		g.OnBalanceExchange(UserID, hid)
+		g.OnLeaveMachine(UserID, hid)
 
 		const Prefix = "/amfphp/json.php/casino.slot.line243.BuBuGaoSheng."
 		expectedURLs := []string{
@@ -94,13 +93,12 @@ func TestFlash2dbPhpGame(t *testing.T) {
 		assertNoError(t, err)
 
 		want := []byte(`getMachineDetail`)
-		got := g.OnGetMachineDetail(userID, gameCode)
+		got := g.OnGetMachineDetail(userID)
 		assertRawJSONEqual(t, got, want)
 	})
 
 	t.Run("creditExchange get correct url and return result", func(t *testing.T) {
 		var sid gode.SessionID = "sidSid123"
-		var gameCode gode.GameCode = 0
 		var betBase string = "1:5"
 		var credit int = 1000
 		expectedURL := `/amfphp/json.php/casino.slot.line243.BuBuGaoSheng.creditExchange/sidSid123/0/1:5/1000`
@@ -113,13 +111,12 @@ func TestFlash2dbPhpGame(t *testing.T) {
 		assertNoError(t, err)
 
 		want := []byte(`credit`)
-		got := g.OnCreditExchange(sid, gameCode, betBase, credit)
+		got := g.OnCreditExchange(sid, betBase, credit)
 		assertRawJSONEqual(t, got, want)
 	})
 
 	t.Run("beginGame get correct url and return result", func(t *testing.T) {
 		var sid gode.SessionID = "sidSid123"
-		var gameCode gode.GameCode = 0
 		var betInfo string = `{"BetLevel":1}`
 		expectedURL := `/amfphp/json.php/casino.slot.line243.BuBuGaoSheng.beginGame/sidSid123/0/{"BetLevel":1}`
 
@@ -131,13 +128,12 @@ func TestFlash2dbPhpGame(t *testing.T) {
 		assertNoError(t, err)
 
 		want := []byte(`begin`)
-		got := g.BeginGame(sid, gameCode, betInfo)
+		got := g.BeginGame(sid, betInfo)
 		assertRawJSONEqual(t, got, want)
 	})
 
 	t.Run("balanceExchange get correct url and return result", func(t *testing.T) {
 		var userID gode.UserID = 362907402
-		var gameCode gode.GameCode = 0
 		var hallID gode.HallID = 6
 		expectedURL := `/amfphp/json.php/casino.slot.line243.BuBuGaoSheng.balanceExchange/362907402/6/0`
 
@@ -149,13 +145,12 @@ func TestFlash2dbPhpGame(t *testing.T) {
 		assertNoError(t, err)
 
 		want := []byte(`balance`)
-		got := g.OnBalanceExchange(userID, hallID, gameCode)
+		got := g.OnBalanceExchange(userID, hallID)
 		assertRawJSONEqual(t, got, want)
 	})
 
 	t.Run("machineLeave get correct url and return result", func(t *testing.T) {
 		var userID gode.UserID = 362907402
-		var gameCode gode.GameCode = 1
 		var hallID gode.HallID = 6
 		expectedURL := `/amfphp/json.php/casino.slot.line243.BuBuGaoSheng.machineLeave/362907402/6/0`
 
@@ -167,7 +162,7 @@ func TestFlash2dbPhpGame(t *testing.T) {
 		assertNoError(t, err)
 
 		want := []byte(`leave`)
-		got := g.OnLeaveMachine(userID, hallID, gameCode)
+		got := g.OnLeaveMachine(userID, hallID)
 		assertRawJSONEqual(t, got, want)
 	})
 }
