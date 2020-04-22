@@ -12,7 +12,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-type StubPhpGame struct {
+type SpyPhpGame struct {
 	LoadInfoResult         string
 	TakeMachineResult      string
 	GetMachineDetailResult string
@@ -25,26 +25,26 @@ type StubPhpGame struct {
 	LeaveMachineCalled    bool
 }
 
-func (s *StubPhpGame) TakeMachine(uid gode.UserID) json.RawMessage {
+func (s *SpyPhpGame) TakeMachine(uid gode.UserID) json.RawMessage {
 	return json.RawMessage(s.TakeMachineResult)
 }
-func (s *StubPhpGame) OnLoadInfo(uid gode.UserID) json.RawMessage {
+func (s *SpyPhpGame) OnLoadInfo(uid gode.UserID) json.RawMessage {
 	return json.RawMessage(s.LoadInfoResult)
 }
-func (s *StubPhpGame) GetMachineDetail(uid gode.UserID) json.RawMessage {
+func (s *SpyPhpGame) GetMachineDetail(uid gode.UserID) json.RawMessage {
 	return json.RawMessage(s.GetMachineDetailResult)
 }
-func (s *StubPhpGame) CreditExchange(sid gode.SessionID, bb string, credit int) json.RawMessage {
+func (s *SpyPhpGame) CreditExchange(sid gode.SessionID, bb string, credit int) json.RawMessage {
 	return json.RawMessage(s.CreditExchangeResult)
 }
-func (s *StubPhpGame) BalanceExchange(uid gode.UserID, hid gode.HallID) json.RawMessage {
+func (s *SpyPhpGame) BalanceExchange(uid gode.UserID, hid gode.HallID) json.RawMessage {
 	s.BalanceExchangeCalled = true
 	return json.RawMessage(s.BalanceExchangeResult)
 }
-func (s *StubPhpGame) BeginGame(sid gode.SessionID, betInfo string) json.RawMessage {
+func (s *SpyPhpGame) BeginGame(sid gode.SessionID, betInfo string) json.RawMessage {
 	return json.RawMessage(s.BeginGameResult)
 }
-func (s *StubPhpGame) LeaveMachine(uid gode.UserID, hid gode.HallID) json.RawMessage {
+func (s *SpyPhpGame) LeaveMachine(uid gode.UserID, hid gode.HallID) json.RawMessage {
 	s.LeaveMachineCalled = true
 	return json.RawMessage(s.LeaveMachineResult)
 }
@@ -70,7 +70,7 @@ func TestWebSocketGame(t *testing.T) {
 
 	t.Run("/ws/game can process game", func(t *testing.T) {
 		stubClient := &StubClient{}
-		stubGame := &StubPhpGame{
+		stubGame := &SpyPhpGame{
 			LoadInfoResult:         `{"event":"LoadInfo"}`,
 			TakeMachineResult:      `{"event":"TakeMachine"}`,
 			GetMachineDetailResult: `{"event":"MachineDetail"}`,
@@ -122,7 +122,7 @@ func TestWebSocketGame(t *testing.T) {
 
 	t.Run("should call leaveMachine when ws disconnect", func(t *testing.T) {
 		stubClient := &StubClient{}
-		stubGame := &StubPhpGame{
+		stubGame := &SpyPhpGame{
 			LoadInfoResult:     `{"event":"LoadInfo"}`,
 			TakeMachineResult:  `{"event":"TakeMachine"}`,
 			LeaveMachineCalled: false,
@@ -207,7 +207,7 @@ func makeWebSocketURL(server *httptest.Server, path string) string {
 func TestGet(t *testing.T) {
 	t.Run("/ returns 404", func(t *testing.T) {
 		stubClient := &StubClient{}
-		stubGame := &StubPhpGame{}
+		stubGame := &SpyPhpGame{}
 		server := gode.NewServer(stubClient, stubGame)
 
 		request, _ := http.NewRequest(http.MethodGet, "/", nil)
