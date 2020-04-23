@@ -2,8 +2,10 @@ package gode
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 type Server struct {
@@ -42,7 +44,15 @@ func NewServer(c Client, g Game) *Server {
 }
 
 type wsDataReceive struct {
-	Action string `json:"action"`
+	Action    string  `json:"action"`
+	SessionID string  `json:"sid"`
+	BetBase   string  `json:"rate"`
+	Credit    string  `json:"credit"`
+	BetInfo   betInfo `json:"betInfo"`
+}
+
+type betInfo struct {
+	BetLevel int `json:"BetLevel"`
 }
 
 type wsDataSend struct {
@@ -90,14 +100,10 @@ func (s *Server) handleMessage(ws *wsServer, msg []byte) {
 		log.Println("Json Unmarshal Error: ", err)
 	}
 
-	var (
-		sid     = s.client.SessionID()
-		uid     = s.client.UserID()
-		hid     = s.client.HallID()
-		bet     = `{"BetLevel":1}`
-		betBase = "1:1"
-		credit  = 1000
-	)
+	fmt.Printf("%#v\n", data)
+	uid := s.client.UserID()
+	hid := s.client.HallID()
+	sid := SessionID(data.SessionID)
 
 	switch data.Action {
 	case ClientLogin:
@@ -111,15 +117,39 @@ func (s *Server) handleMessage(ws *wsServer, msg []byte) {
 		msg := s.makeSendJSON("onGetMachineDetail", s.game.GetMachineDetail(uid))
 		ws.writeBinaryMsg(msg)
 	case ClientBeginGame:
-		msg := s.makeSendJSON("onBeginGame", s.game.BeginGame(sid, bet))
+		//todo: handle error
+		betInfo, _ := parseBetInfo(data)
+		msg := s.makeSendJSON("onBeginGame", s.game.BeginGame(sid, betInfo))
 		ws.writeBinaryMsg(msg)
 	case ClientExchangeCredit:
-		msg := s.makeSendJSON("onCreditExchange", s.game.CreditExchange(sid, betBase, credit))
+		//todo: handle error
+		credit, _ := parseExchangeCredit(data)
+		msg := s.makeSendJSON("onCreditExchange", s.game.CreditExchange(sid, data.BetBase, credit))
 		ws.writeBinaryMsg(msg)
 	case ClientExchangeBalance:
 		msg := s.makeSendJSON("onBalanceExchange", s.game.BalanceExchange(uid, hid))
 		ws.writeBinaryMsg(msg)
 	}
+}
+
+func parseExchangeCredit(data *wsDataReceive) (credit int, err error) {
+	if data.Credit != "" {
+		credit, err = strconv.Atoi(data.Credit)
+		if err != nil {
+			return 0, fmt.Errorf("parse credit error, %v", err)
+		}
+	}
+
+	return credit, err
+}
+
+func parseBetInfo(data *wsDataReceive) (string, error) {
+	betInfo, err := json.Marshal(data.BetInfo)
+	if err != nil {
+		return "", fmt.Errorf("parse bet info error %v", err)
+	}
+
+	return string(betInfo), nil
 }
 
 func (s *Server) makeSendJSON(action string, APIResult json.RawMessage) json.RawMessage {

@@ -2,6 +2,7 @@ package gode_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -23,6 +24,13 @@ type SpyPhpGame struct {
 
 	BalanceExchangeCalled bool
 	LeaveMachineCalled    bool
+
+	ReceivedArgs struct {
+		SID            gode.SessionID
+		BetInfo        string
+		BetBase        string
+		exchangeCredit int
+	}
 }
 
 func (s *SpyPhpGame) TakeMachine(uid gode.UserID) json.RawMessage {
@@ -35,6 +43,9 @@ func (s *SpyPhpGame) GetMachineDetail(uid gode.UserID) json.RawMessage {
 	return json.RawMessage(s.GetMachineDetailResult)
 }
 func (s *SpyPhpGame) CreditExchange(sid gode.SessionID, bb string, credit int) json.RawMessage {
+	s.ReceivedArgs.SID = sid
+	s.ReceivedArgs.BetBase = bb
+	s.ReceivedArgs.exchangeCredit = credit
 	return json.RawMessage(s.CreditExchangeResult)
 }
 func (s *SpyPhpGame) BalanceExchange(uid gode.UserID, hid gode.HallID) json.RawMessage {
@@ -42,6 +53,8 @@ func (s *SpyPhpGame) BalanceExchange(uid gode.UserID, hid gode.HallID) json.RawM
 	return json.RawMessage(s.BalanceExchangeResult)
 }
 func (s *SpyPhpGame) BeginGame(sid gode.SessionID, betInfo string) json.RawMessage {
+	s.ReceivedArgs.SID = sid
+	s.ReceivedArgs.BetInfo = betInfo
 	return json.RawMessage(s.BeginGameResult)
 }
 func (s *SpyPhpGame) LeaveMachine(uid gode.UserID, hid gode.HallID) json.RawMessage {
@@ -147,6 +160,66 @@ func TestWebSocketGame(t *testing.T) {
 			t.Error("expected game.BalanceExchange called but not")
 		}
 
+	})
+
+	t.Run("forward param from client to php beginGame", func(t *testing.T) {
+		stubClient := &StubClient{}
+		stubGame := &SpyPhpGame{
+			BeginGameResult: `{"action":"beginGame"}`,
+		}
+		svr := httptest.NewServer(gode.NewServer(stubClient, stubGame))
+		url := makeWebSocketURL(svr, "/ws/game")
+		wsClient := mustDialWS(t, url)
+		defer svr.Close()
+
+		//ready
+		assertWSReceiveBinaryMsg(t, wsClient, `{"action":"ready","result":{"event":true,"data":null}}`)
+
+		//beginGame
+		sid := gode.SessionID("21d9")
+		betInfo := `{"BetLevel":1}`
+		msg := fmt.Sprintf(`{"action":"beginGame4","sid":"%s","betInfo":%s}`, sid, betInfo)
+		writeBinaryMsg(t, wsClient, msg)
+
+		time.Sleep(1 * time.Millisecond)
+		if stubGame.ReceivedArgs.SID != sid {
+			t.Errorf("expected stubGame receive SID %q, got %q", sid, stubGame.ReceivedArgs.SID)
+		}
+		if stubGame.ReceivedArgs.BetInfo != betInfo {
+			t.Errorf("expected stubGame receive BetInfo %#q, got %#q", betInfo, stubGame.ReceivedArgs.BetInfo)
+		}
+	})
+
+	t.Run("forward param from client to php creditExchange", func(t *testing.T) {
+		stubClient := &StubClient{}
+		stubGame := &SpyPhpGame{
+			CreditExchangeResult: `{"action":"creditExchange"}`,
+		}
+		svr := httptest.NewServer(gode.NewServer(stubClient, stubGame))
+		url := makeWebSocketURL(svr, "/ws/game")
+		wsClient := mustDialWS(t, url)
+		defer svr.Close()
+
+		//ready
+		assertWSReceiveBinaryMsg(t, wsClient, `{"action":"ready","result":{"event":true,"data":null}}`)
+
+		sid := gode.SessionID("21d9")
+		betBase := `1:1`
+		// client passing credit in string
+		credit := 788
+		msg := fmt.Sprintf(`{"action":"creditExchange","sid":"%s", "rate":"%s","credit":"%v"}`, sid, betBase, credit)
+		writeBinaryMsg(t, wsClient, msg)
+
+		time.Sleep(1 * time.Millisecond)
+		if stubGame.ReceivedArgs.SID != sid {
+			t.Errorf("expected stubGame receive SID %q, got %q", sid, stubGame.ReceivedArgs.SID)
+		}
+		if stubGame.ReceivedArgs.BetBase != betBase {
+			t.Errorf("expected stubGame receive BetBase %q, got %q", betBase, stubGame.ReceivedArgs.BetBase)
+		}
+		if stubGame.ReceivedArgs.exchangeCredit != credit {
+			t.Errorf("expected stubGame receive credit %d, got %d", credit, stubGame.ReceivedArgs.exchangeCredit)
+		}
 	})
 }
 
