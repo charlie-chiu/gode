@@ -69,7 +69,7 @@ type StubClient struct {
 	SID gode.SessionID
 }
 
-func (c StubClient) Login() json.RawMessage {
+func (c StubClient) Login(gode.SessionID) json.RawMessage {
 	return json.RawMessage(`{"event":"login"}`)
 }
 

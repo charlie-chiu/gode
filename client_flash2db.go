@@ -2,6 +2,7 @@ package gode
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -49,8 +50,9 @@ type LoginCheck struct {
 	Event bool `json:"event"`
 }
 
-func (c *Flash2dbClient) Login() json.RawMessage {
-	url := c.host
+func (c *Flash2dbClient) Login(sid SessionID) json.RawMessage {
+	ip := "127.0.0.1"
+	url := fmt.Sprintf("%s/amfphp/json.php/Client.loginCheck/%s/%s", c.host, sid, ip)
 	rawMsg := c.call(url)
 
 	loginCheck := &LoginCheck{}

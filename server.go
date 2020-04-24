@@ -101,19 +101,16 @@ func (s *Server) handleMessage(ws *wsServer, msg []byte) {
 	}
 
 	//fmt.Printf("%#v\n", data)
-	uid := s.client.UserID()
-	hid := s.client.HallID()
 	sid := SessionID(data.SessionID)
-
 	switch data.Action {
 	case ClientLogin:
-		ws.writeBinaryMsg(s.makeSendJSON(ServerLogin, s.client.Login()))
-		ws.writeBinaryMsg(s.makeSendJSON("onTakeMachine", s.game.TakeMachine(uid)))
+		ws.writeBinaryMsg(s.makeSendJSON(ServerLogin, s.client.Login(sid)))
+		ws.writeBinaryMsg(s.makeSendJSON("onTakeMachine", s.game.TakeMachine(s.client.UserID())))
 	case ClientOnLoadInfo:
-		msg := s.makeSendJSON("onOnLoadInfo2", s.game.OnLoadInfo(uid))
+		msg := s.makeSendJSON("onOnLoadInfo2", s.game.OnLoadInfo(s.client.UserID()))
 		ws.writeBinaryMsg(msg)
 	case ClientGetMachineDetail:
-		msg := s.makeSendJSON("onGetMachineDetail", s.game.GetMachineDetail(uid))
+		msg := s.makeSendJSON("onGetMachineDetail", s.game.GetMachineDetail(s.client.UserID()))
 		ws.writeBinaryMsg(msg)
 	case ClientBeginGame:
 		//todo: handle error
@@ -126,7 +123,7 @@ func (s *Server) handleMessage(ws *wsServer, msg []byte) {
 		msg := s.makeSendJSON("onCreditExchange", s.game.CreditExchange(sid, BetBase(data.BetBase), credit))
 		ws.writeBinaryMsg(msg)
 	case ClientExchangeBalance:
-		msg := s.makeSendJSON("onBalanceExchange", s.game.BalanceExchange(uid, hid))
+		msg := s.makeSendJSON("onBalanceExchange", s.game.BalanceExchange(s.client.UserID(), s.client.HallID()))
 		ws.writeBinaryMsg(msg)
 	}
 }

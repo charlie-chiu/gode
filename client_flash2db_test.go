@@ -36,6 +36,25 @@ func TestFlash2dbClientBeforeFetchInformation(t *testing.T) {
 }
 
 func TestFlash2dbClient_Login(t *testing.T) {
+	t.Run("get correct url", func(t *testing.T) {
+		// arrange
+		spyHandler := &SpyHandler{}
+		svr := httptest.NewServer(http.HandlerFunc(spyHandler.spy))
+		defer svr.Close()
+		client := gode.NewFlash2dbClient(svr.URL)
+		sid := gode.SessionID("19870604xi")
+		ip := "127.0.0.1"
+		expectedURL := fmt.Sprintf(`/amfphp/json.php/Client.loginCheck/%s/%s`, sid, ip)
+
+		// act
+		client.Login(sid)
+
+		// assert
+		if spyHandler.requestedURL[0] != expectedURL {
+			t.Errorf("expected URL %q, got %q", expectedURL, spyHandler.requestedURL[0])
+		}
+	})
+
 	t.Run("store updated sid, uid and hid after successful login", func(t *testing.T) {
 		sid := gode.SessionID("19870604xi")
 		uid := gode.UserID(362907402)
@@ -47,7 +66,7 @@ func TestFlash2dbClient_Login(t *testing.T) {
 		defer svr.Close()
 
 		client := gode.NewFlash2dbClient(svr.URL)
-		client.Login()
+		client.Login("")
 
 		assertUserIDEqual(t, client.UserID(), uid)
 		assertHallIDEqual(t, client.HallID(), hid)
@@ -63,7 +82,7 @@ func TestFlash2dbClient_Login(t *testing.T) {
 		defer svr.Close()
 
 		client := gode.NewFlash2dbClient(svr.URL)
-		got := client.Login()
+		got := client.Login("")
 
 		assertRawJSONEqual(t, got, json.RawMessage(msg))
 	})

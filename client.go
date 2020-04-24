@@ -14,7 +14,7 @@ type Client interface {
 	SessionID() SessionID
 
 	// fetch user information from source(ACC)
-	Login() json.RawMessage
+	Login(sid SessionID) json.RawMessage
 }
 
 type FakeClient struct {
@@ -23,7 +23,7 @@ type FakeClient struct {
 	SID SessionID
 }
 
-func (c FakeClient) Login() json.RawMessage {
+func (c FakeClient) Login(SessionID) json.RawMessage {
 	return json.RawMessage(`{"event":true,"data":{"COID":2688,"ExchangeRate":1,"GameID":0,"HallID":6,"Sid":"","Test":1,"UserID":0}}`)
 }
 

@@ -9,12 +9,9 @@ import (
 )
 
 func main() {
-	client := gode.FakeClient{
-		UID: 362907402, //dev angel888
-		HID: 32,
-		SID: gode.SessionID("197af9c6341e4f846d6defe4da1aaf0489dc15d5"),
-	}
-	game, err := gode.NewFlash2dbGame("http://103.241.238.141/", 5145)
+	host := "http://103.241.238.141/"
+	client := gode.NewFlash2dbClient(host)
+	game, err := gode.NewFlash2dbGame(host, 5145)
 	if err != nil {
 		log.Fatal("error when NewFlash2dbGame", err)
 	}
