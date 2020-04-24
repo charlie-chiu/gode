@@ -69,6 +69,10 @@ type StubClient struct {
 	SID gode.SessionID
 }
 
+func (c StubClient) Fetch() {
+	panic("implement me")
+}
+
 func (c StubClient) UserID() gode.UserID {
 	return c.UID
 }

@@ -10,6 +10,9 @@ type Client interface {
 	UserID() UserID
 	HallID() HallID
 	SessionID() SessionID
+
+	// fetch user information from source(ACC)
+	Fetch()
 }
 
 type FakeClient struct {
