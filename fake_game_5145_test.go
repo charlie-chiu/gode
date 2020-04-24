@@ -11,9 +11,9 @@ var (
 	sid     SessionID = ""
 	uid     UserID    = 455648515
 	hid     HallID    = 6
-	bet     string    = `{"BetLevel":1}`
-	betBase string    = "1:1"
-	credit  int       = 1000
+	bet               = BetInfo(`{"BetLevel":1}`)
+	betBase           = "1:1"
+	credit            = 1000
 )
 
 func TestFakeGame5145(t *testing.T) {

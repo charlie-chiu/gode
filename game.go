@@ -21,7 +21,7 @@ type Game interface {
 	BalanceExchange(uid UserID, hid HallID) json.RawMessage
 
 	//beginGame($_sSid, $_iGameCode, $_aBetInfo, $_iPlatform = null, $_iClient = 0, $_sOrderIp = null)
-	BeginGame(sid SessionID, betInfo string) json.RawMessage
+	BeginGame(sid SessionID, betInfo BetInfo) json.RawMessage
 
 	//machineLeave($_iUserID, $_iHallID, $_iGameCode)
 	LeaveMachine(uid UserID, hid HallID) json.RawMessage
@@ -30,4 +30,5 @@ type Game interface {
 type (
 	GameType int
 	GameCode int
+	BetInfo  json.RawMessage
 )

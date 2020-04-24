@@ -1,6 +1,7 @@
 package gode_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -27,7 +28,7 @@ type SpyPhpGame struct {
 
 	ReceivedArgs struct {
 		SID            gode.SessionID
-		BetInfo        string
+		BetInfo        gode.BetInfo
 		BetBase        string
 		exchangeCredit int
 	}
@@ -52,7 +53,7 @@ func (s *SpyPhpGame) BalanceExchange(uid gode.UserID, hid gode.HallID) json.RawM
 	s.BalanceExchangeCalled = true
 	return json.RawMessage(s.BalanceExchangeResult)
 }
-func (s *SpyPhpGame) BeginGame(sid gode.SessionID, betInfo string) json.RawMessage {
+func (s *SpyPhpGame) BeginGame(sid gode.SessionID, betInfo gode.BetInfo) json.RawMessage {
 	s.ReceivedArgs.SID = sid
 	s.ReceivedArgs.BetInfo = betInfo
 	return json.RawMessage(s.BeginGameResult)
@@ -177,7 +178,7 @@ func TestWebSocketGame(t *testing.T) {
 
 		//beginGame
 		sid := gode.SessionID("21d9")
-		betInfo := `{"BetLevel":1}`
+		betInfo := gode.BetInfo(`{"BetLevel":1}`)
 		msg := fmt.Sprintf(`{"action":"beginGame4","sid":"%s","betInfo":%s}`, sid, betInfo)
 		writeBinaryMsg(t, wsClient, msg)
 
@@ -185,7 +186,7 @@ func TestWebSocketGame(t *testing.T) {
 		if stubGame.ReceivedArgs.SID != sid {
 			t.Errorf("expected stubGame receive SID %q, got %q", sid, stubGame.ReceivedArgs.SID)
 		}
-		if stubGame.ReceivedArgs.BetInfo != betInfo {
+		if bytes.Compare(stubGame.ReceivedArgs.BetInfo, betInfo) != 0 {
 			t.Errorf("expected stubGame receive BetInfo %#q, got %#q", betInfo, stubGame.ReceivedArgs.BetInfo)
 		}
 	})

@@ -77,7 +77,7 @@ const beginGameResult1 = `{"action":"onBeginGame","result":{"data":{"AllPayTotal
 
 const beginGameResult2 = `{"action":"onBeginGame","result":{"data":{"AllPayTotal":0,"AxisLocation":"1-2-3-4-5","BBJackpot":{},"BetInfo":{},"BetValue":50,"Cards":["1-2-3","2-3-4","3-4-5","4-5-6","5-6-7"],"Credit":49950,"Credit_End":49950,"EncryID":null,"FreeGameBonusTime":{"ScatterBonus":[[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0]]},"GamePayTotal":{"Lines":0},"LinePayoff":0,"Lines":[],"PayTotal":0,"PayValue":0,"RollerNumber":0,"WagersID":310631818546},"event":true}}`
 
-func (g FakeGame5145) BeginGame(sid SessionID, betInfo string) json.RawMessage {
+func (g FakeGame5145) BeginGame(sid SessionID, betInfo BetInfo) json.RawMessage {
 	rand.Seed(time.Now().UnixNano())
 	if rand.Intn(10)%2 == 0 {
 		return json.RawMessage(beginGameResult1)

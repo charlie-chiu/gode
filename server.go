@@ -100,7 +100,7 @@ func (s *Server) handleMessage(ws *wsServer, msg []byte) {
 		log.Println("Json Unmarshal Error: ", err)
 	}
 
-	fmt.Printf("%#v\n", data)
+	//fmt.Printf("%#v\n", data)
 	uid := s.client.UserID()
 	hid := s.client.HallID()
 	sid := SessionID(data.SessionID)
@@ -143,13 +143,13 @@ func parseExchangeCredit(data *wsDataReceive) (credit int, err error) {
 	return credit, err
 }
 
-func parseBetInfo(data *wsDataReceive) (string, error) {
+func parseBetInfo(data *wsDataReceive) (BetInfo, error) {
 	betInfo, err := json.Marshal(data.BetInfo)
 	if err != nil {
-		return "", fmt.Errorf("parse bet info error %v", err)
+		return BetInfo(``), fmt.Errorf("parse bet info error %v", err)
 	}
 
-	return string(betInfo), nil
+	return betInfo, nil
 }
 
 func (s *Server) makeSendJSON(action string, APIResult json.RawMessage) json.RawMessage {

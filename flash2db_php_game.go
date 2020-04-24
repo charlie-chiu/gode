@@ -77,8 +77,8 @@ func (g *Flash2dbPhpGame) GetMachineDetail(uid UserID) json.RawMessage {
 	return g.call(url)
 }
 
-func (g *Flash2dbPhpGame) BeginGame(sid SessionID, betInfo string) json.RawMessage {
-	u := g.generateURL(BeginGame, sid, g.gameCode, betInfo)
+func (g *Flash2dbPhpGame) BeginGame(sid SessionID, betInfo BetInfo) json.RawMessage {
+	u := g.generateURL(BeginGame, sid, g.gameCode, string(betInfo))
 
 	return g.call(u)
 }

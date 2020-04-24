@@ -54,7 +54,7 @@ func TestFlash2dbPhpGame(t *testing.T) {
 		g.OnLoadInfo(UserID)
 		g.GetMachineDetail(UserID)
 		g.CreditExchange(sid, "1:1", 1000)
-		g.BeginGame(sid, `{"BetLevel":1}`)
+		g.BeginGame(sid, gode.BetInfo(`{"BetLevel":1}`))
 		g.BalanceExchange(UserID, hid)
 		g.LeaveMachine(UserID, hid)
 
@@ -117,7 +117,7 @@ func TestFlash2dbPhpGame(t *testing.T) {
 
 	t.Run("beginGame get correct url and return result", func(t *testing.T) {
 		var sid gode.SessionID = "sidSid123"
-		var betInfo string = `{"BetLevel":1}`
+		var betInfo = gode.BetInfo(`{"BetLevel":1}`)
 		expectedURL := `/amfphp/json.php/casino.slot.line243.BuBuGaoSheng.beginGame/sidSid123/0/{"BetLevel":1}`
 
 		srv := NewTestingServer(t, expectedURL, `begin`)
