@@ -14,9 +14,9 @@ func main() {
 		HID: 32,
 		SID: gode.SessionID("197af9c6341e4f846d6defe4da1aaf0489dc15d5"),
 	}
-	game, err := gode.NewFlash2dbPhpGame("http://103.241.238.141/", 5145)
+	game, err := gode.NewFlash2dbGame("http://103.241.238.141/", 5145)
 	if err != nil {
-		log.Fatal("error when NewFlash2dbPhpGame", err)
+		log.Fatal("error when NewFlash2dbGame", err)
 	}
 	server := gode.NewServer(client, game)
 

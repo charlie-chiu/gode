@@ -20,10 +20,10 @@ func (h *SpyHandler) spy(w http.ResponseWriter, r *http.Request) {
 	_, _ = fmt.Fprint(w, `{"event":true,"data":{"event":true,"GameCode":43}}`)
 }
 
-func TestFlash2dbPhpGame(t *testing.T) {
+func TestFlash2dbGame(t *testing.T) {
 	t.Run("constructor return an error when game path not exist", func(t *testing.T) {
 		dummyURL := "127.0.0.1"
-		_, err := gode.NewFlash2dbPhpGame(dummyURL, 99888)
+		_, err := gode.NewFlash2dbGame(dummyURL, 99888)
 		assertError(t, err)
 	})
 
@@ -34,7 +34,7 @@ func TestFlash2dbPhpGame(t *testing.T) {
 		srv := NewTestingServer(t, expectedURL, `{"event":true,"data":{"event":true,"GameCode":43}}`)
 		defer srv.Close()
 
-		g, err := gode.NewFlash2dbPhpGame(srv.URL, 5145)
+		g, err := gode.NewFlash2dbGame(srv.URL, 5145)
 		assertNoError(t, err)
 
 		want := json.RawMessage(`{"event":true,"data":{"event":true,"GameCode":43}}`)
@@ -45,7 +45,7 @@ func TestFlash2dbPhpGame(t *testing.T) {
 	t.Run("will using game code after from take machine api", func(t *testing.T) {
 		spyHandler := &SpyHandler{}
 		svr := httptest.NewServer(http.HandlerFunc(spyHandler.spy))
-		g, _ := gode.NewFlash2dbPhpGame(svr.URL, 5145)
+		g, _ := gode.NewFlash2dbGame(svr.URL, 5145)
 
 		UserID := gode.UserID(111)
 		hid := gode.HallID(6)
@@ -88,7 +88,7 @@ func TestFlash2dbPhpGame(t *testing.T) {
 		srv := NewTestingServer(t, expectedURL, `getMachineDetail`)
 		defer srv.Close()
 
-		g, err := gode.NewFlash2dbPhpGame(srv.URL, 5145)
+		g, err := gode.NewFlash2dbGame(srv.URL, 5145)
 
 		assertNoError(t, err)
 
@@ -106,7 +106,7 @@ func TestFlash2dbPhpGame(t *testing.T) {
 		srv := NewTestingServer(t, expectedURL, `credit`)
 		defer srv.Close()
 
-		g, err := gode.NewFlash2dbPhpGame(srv.URL, 5145)
+		g, err := gode.NewFlash2dbGame(srv.URL, 5145)
 
 		assertNoError(t, err)
 
@@ -123,7 +123,7 @@ func TestFlash2dbPhpGame(t *testing.T) {
 		srv := NewTestingServer(t, expectedURL, `begin`)
 		defer srv.Close()
 
-		g, err := gode.NewFlash2dbPhpGame(srv.URL, 5145)
+		g, err := gode.NewFlash2dbGame(srv.URL, 5145)
 
 		assertNoError(t, err)
 
@@ -140,7 +140,7 @@ func TestFlash2dbPhpGame(t *testing.T) {
 		srv := NewTestingServer(t, expectedURL, `balance`)
 		defer srv.Close()
 
-		g, err := gode.NewFlash2dbPhpGame(srv.URL, 5145)
+		g, err := gode.NewFlash2dbGame(srv.URL, 5145)
 
 		assertNoError(t, err)
 
@@ -157,7 +157,7 @@ func TestFlash2dbPhpGame(t *testing.T) {
 		srv := NewTestingServer(t, expectedURL, `leave`)
 		defer srv.Close()
 
-		g, err := gode.NewFlash2dbPhpGame(srv.URL, 5145)
+		g, err := gode.NewFlash2dbGame(srv.URL, 5145)
 
 		assertNoError(t, err)
 
