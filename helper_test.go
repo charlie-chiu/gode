@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/http"
 	"testing"
+
+	"github.com/charlie-chiu/gode"
 )
 
 func assertRawJSONEqual(t *testing.T, got, want json.RawMessage) {
@@ -35,5 +37,26 @@ func assertURLEqual(t *testing.T, r *http.Request, want string) {
 	t.Helper()
 	if r.URL.Path != want {
 		t.Errorf("URL not matched\n want %q\n, got %q", want, r.URL)
+	}
+}
+
+func assertSessionIDEqual(t *testing.T, got, want gode.SessionID) {
+	t.Helper()
+	if got != want {
+		t.Errorf("wanted SessionID %s, got %s", want, got)
+	}
+}
+
+func assertHallIDEqual(t *testing.T, got, want gode.HallID) {
+	t.Helper()
+	if got != want {
+		t.Errorf("wanted HallID %d, got %d", want, got)
+	}
+}
+
+func assertUserIDEqual(t *testing.T, got, want gode.UserID) {
+	t.Helper()
+	if got != want {
+		t.Errorf("wanted UserID %d, got %d", want, got)
 	}
 }

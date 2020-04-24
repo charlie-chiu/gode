@@ -177,15 +177,13 @@ func TestWebSocketGame(t *testing.T) {
 		assertWSReceiveBinaryMsg(t, wsClient, `{"action":"ready","result":{"event":true,"data":null}}`)
 
 		//beginGame
-		sid := gode.SessionID("21d9")
+		wantedSID := gode.SessionID("21d9")
 		betInfo := gode.BetInfo(`{"BetLevel":1}`)
-		msg := fmt.Sprintf(`{"action":"beginGame4","sid":"%s","betInfo":%s}`, sid, betInfo)
+		msg := fmt.Sprintf(`{"action":"beginGame4","sid":"%s","betInfo":%s}`, wantedSID, betInfo)
 		writeBinaryMsg(t, wsClient, msg)
 
 		time.Sleep(1 * time.Millisecond)
-		if stubGame.ReceivedArgs.SID != sid {
-			t.Errorf("expected stubGame receive SID %q, got %q", sid, stubGame.ReceivedArgs.SID)
-		}
+		assertSessionIDEqual(t, stubGame.ReceivedArgs.SID, wantedSID)
 		if bytes.Compare(stubGame.ReceivedArgs.BetInfo, betInfo) != 0 {
 			t.Errorf("expected stubGame receive BetInfo %#q, got %#q", betInfo, stubGame.ReceivedArgs.BetInfo)
 		}
@@ -204,17 +202,15 @@ func TestWebSocketGame(t *testing.T) {
 		//ready
 		assertWSReceiveBinaryMsg(t, wsClient, `{"action":"ready","result":{"event":true,"data":null}}`)
 
-		sid := gode.SessionID("21d9")
+		wantedSID := gode.SessionID("21d9")
 		betBase := gode.BetBase("1:1")
 		// client passing credit in string
 		credit := 788
-		msg := fmt.Sprintf(`{"action":"creditExchange","sid":"%s", "rate":"%s","credit":"%v"}`, sid, betBase, credit)
+		msg := fmt.Sprintf(`{"action":"creditExchange","sid":"%s", "rate":"%s","credit":"%v"}`, wantedSID, betBase, credit)
 		writeBinaryMsg(t, wsClient, msg)
 
 		time.Sleep(1 * time.Millisecond)
-		if stubGame.ReceivedArgs.SID != sid {
-			t.Errorf("expected stubGame receive SID %q, got %q", sid, stubGame.ReceivedArgs.SID)
-		}
+		assertSessionIDEqual(t, stubGame.ReceivedArgs.SID, wantedSID)
 		if stubGame.ReceivedArgs.BetBase != betBase {
 			t.Errorf("expected stubGame receive BetBase %q, got %q", betBase, stubGame.ReceivedArgs.BetBase)
 		}
