@@ -50,9 +50,7 @@ func TestFlash2dbClient_Login(t *testing.T) {
 		client.Login(sid)
 
 		// assert
-		if spyHandler.requestedURL[0] != expectedURL {
-			t.Errorf("expected URL %q, got %q", expectedURL, spyHandler.requestedURL[0])
-		}
+		assertURLEqual(t, spyHandler.requestedURL[0], expectedURL)
 	})
 
 	t.Run("store updated sid, uid and hid after successful login", func(t *testing.T) {
@@ -61,7 +59,7 @@ func TestFlash2dbClient_Login(t *testing.T) {
 		hid := gode.HallID(32)
 		svr := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
 			//client.loginCheck return HallID as string.
-			_, _ = fmt.Fprintf(w, `{"data":{"UserID":%d,"Sid":"%s","HallID":"%d","GameID":"0","COID":"216310","Test":"0","ExchangeRate":"1","IP":"127.0.0.1"},"event":true}`, uid, sid, hid)
+			_, _ = fmt.Fprintf(w, `{"data":{"UserID":%d,"Sid":"%s","HallID":"%d"},"event":true}`, uid, sid, hid)
 		}))
 		defer svr.Close()
 

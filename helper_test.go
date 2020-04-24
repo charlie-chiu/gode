@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"testing"
 
 	"github.com/charlie-chiu/gode"
@@ -33,10 +32,10 @@ func assertNoError(t *testing.T, err error) {
 	}
 }
 
-func assertURLEqual(t *testing.T, r *http.Request, want string) {
+func assertURLEqual(t *testing.T, got, want string) {
 	t.Helper()
-	if r.URL.Path != want {
-		t.Errorf("URL not matched\n want %q\n, got %q", want, r.URL)
+	if got != want {
+		t.Errorf("URL not matched\n want %q\n, got %q", want, got)
 	}
 }
 

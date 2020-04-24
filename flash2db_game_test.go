@@ -170,7 +170,7 @@ func TestFlash2dbGame(t *testing.T) {
 func NewTestingServer(t *testing.T, expectedURL string, response string) *httptest.Server {
 	t.Helper()
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assertURLEqual(t, r, expectedURL)
+		assertURLEqual(t, r.URL.Path, expectedURL)
 		_, _ = fmt.Fprint(w, response)
 	}))
 }
