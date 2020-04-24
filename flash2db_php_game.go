@@ -106,6 +106,8 @@ func (g *Flash2dbPhpGame) call(url string) json.RawMessage {
 	if err != nil {
 		log.Fatal("http Get Error", err)
 	}
+	//todo: should we do anything?
+	//noinspection GoUnhandledErrorResult
 	defer response.Body.Close()
 
 	bytes, err := ioutil.ReadAll(response.Body)

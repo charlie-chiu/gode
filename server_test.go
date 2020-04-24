@@ -34,13 +34,13 @@ type SpyPhpGame struct {
 	}
 }
 
-func (s *SpyPhpGame) TakeMachine(uid gode.UserID) json.RawMessage {
+func (s *SpyPhpGame) TakeMachine(gode.UserID) json.RawMessage {
 	return json.RawMessage(s.TakeMachineResult)
 }
-func (s *SpyPhpGame) OnLoadInfo(uid gode.UserID) json.RawMessage {
+func (s *SpyPhpGame) OnLoadInfo(gode.UserID) json.RawMessage {
 	return json.RawMessage(s.LoadInfoResult)
 }
-func (s *SpyPhpGame) GetMachineDetail(uid gode.UserID) json.RawMessage {
+func (s *SpyPhpGame) GetMachineDetail(gode.UserID) json.RawMessage {
 	return json.RawMessage(s.GetMachineDetailResult)
 }
 func (s *SpyPhpGame) CreditExchange(sid gode.SessionID, betBase gode.BetBase, credit int) json.RawMessage {
@@ -49,7 +49,7 @@ func (s *SpyPhpGame) CreditExchange(sid gode.SessionID, betBase gode.BetBase, cr
 	s.ReceivedArgs.exchangeCredit = credit
 	return json.RawMessage(s.CreditExchangeResult)
 }
-func (s *SpyPhpGame) BalanceExchange(uid gode.UserID, hid gode.HallID) json.RawMessage {
+func (s *SpyPhpGame) BalanceExchange(gode.UserID, gode.HallID) json.RawMessage {
 	s.BalanceExchangeCalled = true
 	return json.RawMessage(s.BalanceExchangeResult)
 }
@@ -58,7 +58,7 @@ func (s *SpyPhpGame) BeginGame(sid gode.SessionID, betInfo gode.BetInfo) json.Ra
 	s.ReceivedArgs.BetInfo = betInfo
 	return json.RawMessage(s.BeginGameResult)
 }
-func (s *SpyPhpGame) LeaveMachine(uid gode.UserID, hid gode.HallID) json.RawMessage {
+func (s *SpyPhpGame) LeaveMachine(gode.UserID, gode.HallID) json.RawMessage {
 	s.LeaveMachineCalled = true
 	return json.RawMessage(s.LeaveMachineResult)
 }

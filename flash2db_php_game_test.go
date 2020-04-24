@@ -17,7 +17,7 @@ type SpyHandler struct {
 
 func (h *SpyHandler) spy(w http.ResponseWriter, r *http.Request) {
 	h.requestedURL = append(h.requestedURL, r.URL.Path)
-	fmt.Fprint(w, `{"event":true,"data":{"event":true,"GameCode":43}}`)
+	_, _ = fmt.Fprint(w, `{"event":true,"data":{"event":true,"GameCode":43}}`)
 }
 
 func TestFlash2dbPhpGame(t *testing.T) {
@@ -100,7 +100,7 @@ func TestFlash2dbPhpGame(t *testing.T) {
 	t.Run("creditExchange get correct url and return result", func(t *testing.T) {
 		sid := gode.SessionID("sidSid123")
 		betBase := gode.BetBase("1:5")
-		var credit int = 1000
+		var credit = 1000
 		expectedURL := `/amfphp/json.php/casino.slot.line243.BuBuGaoSheng.creditExchange/sidSid123/0/1:5/1000`
 
 		srv := NewTestingServer(t, expectedURL, `credit`)
@@ -171,6 +171,6 @@ func NewTestingServer(t *testing.T, expectedURL string, response string) *httpte
 	t.Helper()
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assertURLEqual(t, r, expectedURL)
-		fmt.Fprint(w, response)
+		_, _ = fmt.Fprint(w, response)
 	}))
 }
