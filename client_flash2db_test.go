@@ -35,12 +35,13 @@ func TestFlash2dbClientBeforeFetchInformation(t *testing.T) {
 }
 
 func TestFlash2dbClient_Fetch(t *testing.T) {
-	t.Run("OK store updated user info", func(t *testing.T) {
+	t.Run("OK store updated sid, uid and hid", func(t *testing.T) {
 		sid := gode.SessionID("19870604xi")
 		uid := gode.UserID(362907402)
 		hid := gode.HallID(32)
 		svr := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
-			_, _ = fmt.Fprintf(w, `{"event":true,"data":{"Sid":"%s","UserID":%d,"UserName":"no_one","HallID":%d,"Currency":"RMB","Credit":19870604}}`, sid, uid, hid)
+			//client.loginCheck return HallID as string.
+			_, _ = fmt.Fprintf(w, `{"data":{"UserID":%d,"Sid":"%s","HallID":"%d","GameID":"0","COID":"216310","Test":"0","ExchangeRate":"1","IP":"127.0.0.1"},"event":true}`, uid, sid, hid)
 		}))
 		defer svr.Close()
 

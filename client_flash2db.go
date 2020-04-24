@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 // this implementation fetch user data from flash2db
@@ -33,34 +34,35 @@ func (c *Flash2dbClient) SessionID() SessionID {
 	return c.sid
 }
 
-// result of flash2db client.getUserInfo
-type UserInfo struct {
-	Event bool `json:"event"`
-	Data  struct {
-		Sid      string `json:"Sid"`
-		UserID   int    `json:"UserID"`
-		UserName string `json:"UserName"`
-		HallID   int    `json:"HallID"`
-		Currency string `json:"Currency"`
-		Credit   int    `json:"Credit"`
+// result of flash2db client.loginCheck
+type LoginCheck struct {
+	Data struct {
+		UserID       int    `json:"UserID"`
+		Sid          string `json:"Sid"`
+		HallID       string `json:"HallID"`
+		GameID       string `json:"GameID"`
+		COID         string `json:"COID"`
+		Test         string `json:"Test"`
+		ExchangeRate string `json:"ExchangeRate"`
+		IP           string `json:"IP"`
 	} `json:"data"`
+	Event bool `json:"event"`
 }
 
 func (c *Flash2dbClient) Fetch() {
 	url := c.host
 	rawMsg := c.call(url)
 
-	//rawMsg := json.RawMessage(`{"event":true,"data":{"Sid":"197af9c6341e4f846d6defe4da1aaf0489dc15d5","UserID":362907402,"UserName":"angel888","HallID":32,"Currency":"RMB","Credit":19872311}}`)
-	userInfo := &UserInfo{}
-	err := json.Unmarshal(rawMsg, userInfo)
+	loginCheck := &LoginCheck{}
+	err := json.Unmarshal(rawMsg, loginCheck)
 	if err != nil {
 		log.Panicf("JSON unmarshal error, %v", err)
 		return
 	}
 
-	c.hid = HallID(userInfo.Data.HallID)
-	c.uid = UserID(userInfo.Data.UserID)
-	c.sid = SessionID(userInfo.Data.Sid)
+	c.hid = toHallID(loginCheck.Data.HallID)
+	c.uid = UserID(loginCheck.Data.UserID)
+	c.sid = SessionID(loginCheck.Data.Sid)
 }
 
 func (c *Flash2dbClient) call(url string) json.RawMessage {
@@ -77,4 +79,18 @@ func (c *Flash2dbClient) call(url string) json.RawMessage {
 		log.Print("ioutil ReadAll error : ", err)
 	}
 	return bytes
+}
+
+func toHallID(input interface{}) (hid HallID) {
+	switch input.(type) {
+	case HallID:
+		return
+	case int:
+		return HallID(input.(int))
+	case string:
+		i, _ := strconv.Atoi(input.(string))
+		return HallID(i)
+	}
+
+	return 0
 }
