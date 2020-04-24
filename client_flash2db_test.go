@@ -1,6 +1,7 @@
 package gode_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -34,8 +35,8 @@ func TestFlash2dbClientBeforeFetchInformation(t *testing.T) {
 	})
 }
 
-func TestFlash2dbClient_Fetch(t *testing.T) {
-	t.Run("OK store updated sid, uid and hid", func(t *testing.T) {
+func TestFlash2dbClient_Login(t *testing.T) {
+	t.Run("store updated sid, uid and hid after successful login", func(t *testing.T) {
 		sid := gode.SessionID("19870604xi")
 		uid := gode.UserID(362907402)
 		hid := gode.HallID(32)
@@ -46,10 +47,24 @@ func TestFlash2dbClient_Fetch(t *testing.T) {
 		defer svr.Close()
 
 		client := gode.NewFlash2dbClient(svr.URL)
-		client.Fetch()
+		client.Login()
 
 		assertUserIDEqual(t, client.UserID(), uid)
 		assertHallIDEqual(t, client.HallID(), hid)
 		assertSessionIDEqual(t, client.SessionID(), sid)
+	})
+
+	t.Run("login return msg got from flash2db", func(t *testing.T) {
+		uid := gode.UserID(9527)
+		msg := fmt.Sprintf(`{"data":{"UserID":%d},"event":true}`, uid)
+		svr := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
+			_, _ = fmt.Fprintf(w, msg)
+		}))
+		defer svr.Close()
+
+		client := gode.NewFlash2dbClient(svr.URL)
+		got := client.Login()
+
+		assertRawJSONEqual(t, got, json.RawMessage(msg))
 	})
 }

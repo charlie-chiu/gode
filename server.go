@@ -107,8 +107,7 @@ func (s *Server) handleMessage(ws *wsServer, msg []byte) {
 
 	switch data.Action {
 	case ClientLogin:
-		const loginResult = `{"event":true,"data":{"COID":2688,"ExchangeRate":1,"GameID":0,"HallID":6,"Sid":"","Test":1,"UserID":0}}`
-		ws.writeBinaryMsg(s.makeSendJSON(ServerLogin, []byte(loginResult)))
+		ws.writeBinaryMsg(s.makeSendJSON(ServerLogin, s.client.Login()))
 		ws.writeBinaryMsg(s.makeSendJSON("onTakeMachine", s.game.TakeMachine(uid)))
 	case ClientOnLoadInfo:
 		msg := s.makeSendJSON("onOnLoadInfo2", s.game.OnLoadInfo(uid))

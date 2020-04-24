@@ -49,7 +49,7 @@ type LoginCheck struct {
 	Event bool `json:"event"`
 }
 
-func (c *Flash2dbClient) Fetch() {
+func (c *Flash2dbClient) Login() json.RawMessage {
 	url := c.host
 	rawMsg := c.call(url)
 
@@ -57,12 +57,13 @@ func (c *Flash2dbClient) Fetch() {
 	err := json.Unmarshal(rawMsg, loginCheck)
 	if err != nil {
 		log.Panicf("JSON unmarshal error, %v", err)
-		return
 	}
 
 	c.hid = toHallID(loginCheck.Data.HallID)
 	c.uid = UserID(loginCheck.Data.UserID)
 	c.sid = SessionID(loginCheck.Data.Sid)
+
+	return rawMsg
 }
 
 func (c *Flash2dbClient) call(url string) json.RawMessage {

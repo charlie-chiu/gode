@@ -1,5 +1,7 @@
 package gode
 
+import "encoding/json"
+
 type (
 	SessionID string
 	UserID    int
@@ -12,13 +14,17 @@ type Client interface {
 	SessionID() SessionID
 
 	// fetch user information from source(ACC)
-	Fetch()
+	Login() json.RawMessage
 }
 
 type FakeClient struct {
 	UID UserID
 	HID HallID
 	SID SessionID
+}
+
+func (c FakeClient) Login() json.RawMessage {
+	return json.RawMessage(`{"event":true,"data":{"COID":2688,"ExchangeRate":1,"GameID":0,"HallID":6,"Sid":"","Test":1,"UserID":0}}`)
 }
 
 func (c FakeClient) UserID() UserID {

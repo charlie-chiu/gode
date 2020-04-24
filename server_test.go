@@ -69,8 +69,8 @@ type StubClient struct {
 	SID gode.SessionID
 }
 
-func (c StubClient) Fetch() {
-	panic("implement me")
+func (c StubClient) Login() json.RawMessage {
+	return json.RawMessage(`{"event":"login"}`)
 }
 
 func (c StubClient) UserID() gode.UserID {
@@ -108,7 +108,7 @@ func TestWebSocketGame(t *testing.T) {
 
 			//ClientLogin
 			writeBinaryMsg(t, wsClient, `{"action":"loginBySid","sid":"21d9b36e42c8275a4359f6815b859df05ec2bb0a"}`)
-			assertWSReceiveBinaryMsg(t, wsClient, `{"action":"onLogin","result":{"event":true,"data":{"COID":2688,"ExchangeRate":1,"GameID":0,"HallID":6,"Sid":"","Test":1,"UserID":0}}}`)
+			assertWSReceiveBinaryMsg(t, wsClient, `{"action":"onLogin","result":{"event":"login"}}`)
 			assertWSReceiveBinaryMsg(t, wsClient, `{"action":"onTakeMachine","result":{"event":"TakeMachine"}}`)
 
 			//ClientOnLoadInfo
