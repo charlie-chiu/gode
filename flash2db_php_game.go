@@ -83,8 +83,8 @@ func (g *Flash2dbPhpGame) BeginGame(sid SessionID, betInfo BetInfo) json.RawMess
 	return g.call(u)
 }
 
-func (g *Flash2dbPhpGame) CreditExchange(sid SessionID, bb string, credit int) json.RawMessage {
-	url := g.generateURL(CreditExchange, sid, g.gameCode, bb, credit)
+func (g *Flash2dbPhpGame) CreditExchange(sid SessionID, betBase BetBase, credit int) json.RawMessage {
+	url := g.generateURL(CreditExchange, sid, g.gameCode, betBase, credit)
 
 	return g.call(url)
 }

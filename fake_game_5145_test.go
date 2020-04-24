@@ -12,7 +12,7 @@ var (
 	uid     UserID    = 455648515
 	hid     HallID    = 6
 	bet               = BetInfo(`{"BetLevel":1}`)
-	betBase           = "1:1"
+	betBase           = BetBase("1:1")
 	credit            = 1000
 )
 

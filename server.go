@@ -124,7 +124,7 @@ func (s *Server) handleMessage(ws *wsServer, msg []byte) {
 	case ClientExchangeCredit:
 		//todo: handle error
 		credit, _ := parseExchangeCredit(data)
-		msg := s.makeSendJSON("onCreditExchange", s.game.CreditExchange(sid, data.BetBase, credit))
+		msg := s.makeSendJSON("onCreditExchange", s.game.CreditExchange(sid, BetBase(data.BetBase), credit))
 		ws.writeBinaryMsg(msg)
 	case ClientExchangeBalance:
 		msg := s.makeSendJSON("onBalanceExchange", s.game.BalanceExchange(uid, hid))

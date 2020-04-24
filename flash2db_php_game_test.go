@@ -98,8 +98,8 @@ func TestFlash2dbPhpGame(t *testing.T) {
 	})
 
 	t.Run("creditExchange get correct url and return result", func(t *testing.T) {
-		var sid gode.SessionID = "sidSid123"
-		var betBase string = "1:5"
+		sid := gode.SessionID("sidSid123")
+		betBase := gode.BetBase("1:5")
 		var credit int = 1000
 		expectedURL := `/amfphp/json.php/casino.slot.line243.BuBuGaoSheng.creditExchange/sidSid123/0/1:5/1000`
 

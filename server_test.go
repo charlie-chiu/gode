@@ -29,7 +29,7 @@ type SpyPhpGame struct {
 	ReceivedArgs struct {
 		SID            gode.SessionID
 		BetInfo        gode.BetInfo
-		BetBase        string
+		BetBase        gode.BetBase
 		exchangeCredit int
 	}
 }
@@ -43,9 +43,9 @@ func (s *SpyPhpGame) OnLoadInfo(uid gode.UserID) json.RawMessage {
 func (s *SpyPhpGame) GetMachineDetail(uid gode.UserID) json.RawMessage {
 	return json.RawMessage(s.GetMachineDetailResult)
 }
-func (s *SpyPhpGame) CreditExchange(sid gode.SessionID, bb string, credit int) json.RawMessage {
+func (s *SpyPhpGame) CreditExchange(sid gode.SessionID, betBase gode.BetBase, credit int) json.RawMessage {
 	s.ReceivedArgs.SID = sid
-	s.ReceivedArgs.BetBase = bb
+	s.ReceivedArgs.BetBase = betBase
 	s.ReceivedArgs.exchangeCredit = credit
 	return json.RawMessage(s.CreditExchangeResult)
 }
@@ -205,7 +205,7 @@ func TestWebSocketGame(t *testing.T) {
 		assertWSReceiveBinaryMsg(t, wsClient, `{"action":"ready","result":{"event":true,"data":null}}`)
 
 		sid := gode.SessionID("21d9")
-		betBase := `1:1`
+		betBase := gode.BetBase("1:1")
 		// client passing credit in string
 		credit := 788
 		msg := fmt.Sprintf(`{"action":"creditExchange","sid":"%s", "rate":"%s","credit":"%v"}`, sid, betBase, credit)

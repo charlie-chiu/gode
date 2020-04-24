@@ -15,7 +15,7 @@ type Game interface {
 	GetMachineDetail(uid UserID) json.RawMessage
 
 	//creditExchange($_sSid, $_iGameCode, $_sBetBase, $_iCredit)
-	CreditExchange(sid SessionID, bb string, credit int) json.RawMessage
+	CreditExchange(sid SessionID, betBase BetBase, credit int) json.RawMessage
 
 	//balanceExchange($_iUserID, $_iHallID, $_iGameCode)
 	BalanceExchange(uid UserID, hid HallID) json.RawMessage
@@ -31,4 +31,5 @@ type (
 	GameType int
 	GameCode int
 	BetInfo  json.RawMessage
+	BetBase  string
 )

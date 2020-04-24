@@ -86,7 +86,7 @@ func (g FakeGame5145) BeginGame(sid SessionID, betInfo BetInfo) json.RawMessage 
 	}
 }
 
-func (g FakeGame5145) CreditExchange(sid SessionID, bb string, credit int) json.RawMessage {
+func (g FakeGame5145) CreditExchange(sid SessionID, betBase BetBase, credit int) json.RawMessage {
 	msg := `{"action":"onCreditExchange","result":{"data":{"Balance":99949999.99,"BetBase":"1:1","Credit":100,"event":true},"event":true}}`
 	return json.RawMessage(msg)
 }
