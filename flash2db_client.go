@@ -2,24 +2,21 @@ package gode
 
 import (
 	"encoding/json"
-	"fmt"
-	"io/ioutil"
 	"log"
-	"net/http"
 	"strconv"
 )
 
 // this implementation fetch user data from flash2db
 type Flash2dbClient struct {
-	host string
 	uid  UserID
 	hid  HallID
 	sid  SessionID
+	conn Connector
 }
 
-func NewFlash2dbClient(host string) *Flash2dbClient {
+func NewFlash2dbClient(connector Connector) *Flash2dbClient {
 	return &Flash2dbClient{
-		host: host,
+		conn: connector,
 	}
 }
 
@@ -51,9 +48,9 @@ type LoginCheck struct {
 }
 
 func (c *Flash2dbClient) Login(sid SessionID) json.RawMessage {
+	const function = "Client.loginCheck"
 	ip := "127.0.0.1"
-	url := fmt.Sprintf("%s/amfphp/json.php/Client.loginCheck/%s/%s", c.host, sid, ip)
-	rawMsg := c.call(url)
+	rawMsg, _ := c.conn.Connect(function, sid, ip)
 
 	loginCheck := &LoginCheck{}
 	err := json.Unmarshal(rawMsg, loginCheck)
@@ -66,22 +63,6 @@ func (c *Flash2dbClient) Login(sid SessionID) json.RawMessage {
 	c.sid = SessionID(loginCheck.Data.Sid)
 
 	return rawMsg
-}
-
-func (c *Flash2dbClient) call(url string) json.RawMessage {
-	response, err := http.Get(url)
-	if err != nil {
-		log.Fatal("http Get Error", err)
-	}
-	//todo: should we do anything?
-	//noinspection GoUnhandledErrorResult
-	defer response.Body.Close()
-
-	bytes, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		log.Print("ioutil ReadAll error : ", err)
-	}
-	return bytes
 }
 
 func toHallID(input interface{}) (hid HallID) {
