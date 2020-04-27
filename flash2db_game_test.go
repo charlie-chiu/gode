@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/http/httptest"
-	"reflect"
 	"testing"
 
 	"github.com/charlie-chiu/gode"
@@ -22,19 +20,26 @@ func (h *SpyHandler) spy(w http.ResponseWriter, r *http.Request) {
 
 func TestFlash2dbGame(t *testing.T) {
 	t.Run("constructor return an error when game path not exist", func(t *testing.T) {
-		dummyURL := "127.0.0.1"
-		_, err := gode.NewFlash2dbGame(dummyURL, 99888)
+		dummyConnector := &StubConnector{}
+
+		_, err := gode.NewFlash2dbGame(dummyConnector, 99888)
 		assertError(t, err)
 	})
 
-	const PathPrefix = "/amfphp/json.php"
+	const TakeMachineFunction = "casino.slot.line243.BuBuGaoSheng.machineOccupyAuto"
+	dummyUID := gode.UserID(23542)
+	dummyHID := gode.HallID(6)
+	dummySID := gode.SessionID("19870604Xi")
+	dummyCredit := 466
+	dummyBetBase := gode.BetBase("bb")
+	dummyBetInfo := gode.BetInfo(`{"BetLevel":1}`)
 
-	t.Run("TakeMachine get correct url and return result", func(t *testing.T) {
-		expectedURL := PathPrefix + `/casino.slot.line243.BuBuGaoSheng.machineOccupyAuto/362907402`
-		srv := NewTestingServer(t, expectedURL, `{"event":true,"data":{"event":true,"GameCode":43}}`)
-		defer srv.Close()
+	t.Run("TakeMachine return connect result", func(t *testing.T) {
+		connector := &StubConnector{
+			returnMsg: json.RawMessage(`{"event":true,"data":{"event":true,"GameCode":43}}`),
+		}
 
-		g, err := gode.NewFlash2dbGame(srv.URL, 5145)
+		g, err := gode.NewFlash2dbGame(connector, 5145)
 		assertNoError(t, err)
 
 		want := json.RawMessage(`{"event":true,"data":{"event":true,"GameCode":43}}`)
@@ -42,135 +47,130 @@ func TestFlash2dbGame(t *testing.T) {
 		assertRawJSONEqual(t, got, want)
 	})
 
-	t.Run("will using game code after from take machine api", func(t *testing.T) {
-		spyHandler := &SpyHandler{}
-		svr := httptest.NewServer(http.HandlerFunc(spyHandler.spy))
-		g, _ := gode.NewFlash2dbGame(svr.URL, 5145)
+	t.Run("connect with correct args", func(t *testing.T) {
+		spyConnector := &SpyConnector{
+			returnMsg: json.RawMessage(fmt.Sprintf(`{"event":true,"data":{"event":true,"GameCode":%d}}`, 431)),
+		}
+		game, err := gode.NewFlash2dbGame(spyConnector, 5145)
+		assertNoError(t, err)
 
-		UserID := gode.UserID(111)
+		game.TakeMachine(gode.UserID(362907402))
+
+		expectedCalls := []funcCall{
+			{TakeMachineFunction, []interface{}{gode.UserID(362907402)}},
+		}
+
+		assertFuncCalledSame(t, expectedCalls, spyConnector.funcCalled)
+	})
+
+	t.Run("will using game code after from take machine api", func(t *testing.T) {
+		spyConnector := &SpyConnector{}
+		game, err := gode.NewFlash2dbGame(spyConnector, 5145)
+		assertNoError(t, err)
+
+		uid := gode.UserID(111)
 		hid := gode.HallID(6)
 		sid := gode.SessionID(`SessionID466`)
-		g.TakeMachine(UserID)
-		g.OnLoadInfo(UserID)
-		g.GetMachineDetail(UserID)
-		g.CreditExchange(sid, "1:1", 1000)
-		g.BeginGame(sid, gode.BetInfo(`{"BetLevel":1}`))
-		g.BalanceExchange(UserID, hid)
-		g.LeaveMachine(UserID, hid)
+		gc := gode.GameCode(43)
 
-		const Prefix = "/amfphp/json.php/casino.slot.line243.BuBuGaoSheng."
-		expectedURLs := []string{
-			Prefix + `machineOccupyAuto/111`,
-			Prefix + `onLoadInfo/111/43`,
-			Prefix + `getMachineDetail/111/43`,
-			Prefix + `creditExchange/SessionID466/43/1:1/1000`,
-			Prefix + `beginGame/SessionID466/43/{"BetLevel":1}`,
-			Prefix + `balanceExchange/111/6/43`,
-			Prefix + `machineLeave/111/6/43`,
+		spyConnector.returnMsg = json.RawMessage(fmt.Sprintf(`{"event":true,"data":{"event":true,"GameCode":%d}}`, gc))
+		game.TakeMachine(uid)
+		game.OnLoadInfo(uid)
+		game.GetMachineDetail(uid)
+		game.CreditExchange(sid, "1:1", 1000)
+		game.BeginGame(sid, gode.BetInfo(`{"BetLevel":1}`))
+		game.BalanceExchange(uid, hid)
+		game.LeaveMachine(uid, hid)
+
+		const Prefix = "casino.slot.line243.BuBuGaoSheng."
+		expectedCalls := []funcCall{
+			{Prefix + "machineOccupyAuto", []interface{}{uid}},
+			{Prefix + "onLoadInfo", []interface{}{uid, gc}},
+			{Prefix + "getMachineDetail", []interface{}{uid, gc}},
+			{Prefix + "creditExchange", []interface{}{sid, gc, gode.BetBase("1:1"), 1000}},
+			{Prefix + "beginGame", []interface{}{sid, gc, gode.BetInfo(`{"BetLevel":1}`)}},
+			{Prefix + "balanceExchange", []interface{}{uid, hid}},
+			{Prefix + "machineLeave", []interface{}{uid, hid}},
 		}
 
-		// assert SUT called correct URL
-		if !reflect.DeepEqual(expectedURLs, spyHandler.requestedURL) {
-			fmt.Printf("expected: %v\n", expectedURLs)
-			fmt.Printf("     got: %v\n", spyHandler.requestedURL)
-			t.Errorf("URLs not match")
+		assertFuncCalledSame(t, expectedCalls, spyConnector.funcCalled)
+	})
+
+	t.Run("TakeMachine return connect result", func(t *testing.T) {
+		wantedMsg := json.RawMessage(`{"event":true,"data":{"event":true}}`)
+		connector := &StubConnector{
+			returnMsg: wantedMsg,
 		}
-	})
 
-	t.Run("getMachineDetail get correct url and return result", func(t *testing.T) {
-
-		var userID gode.UserID = 362907402
-		var gameCode gode.GameCode = 0
-		gamePath := "/casino.slot.line243.BuBuGaoSheng."
-		phpFunctionName := "getMachineDetail"
-		expectedURL := fmt.Sprintf("%s%s%s/%d/%d", PathPrefix, gamePath, phpFunctionName, userID, gameCode)
-
-		srv := NewTestingServer(t, expectedURL, `getMachineDetail`)
-		defer srv.Close()
-
-		g, err := gode.NewFlash2dbGame(srv.URL, 5145)
-
+		g, err := gode.NewFlash2dbGame(connector, 5145)
 		assertNoError(t, err)
 
-		want := []byte(`getMachineDetail`)
-		got := g.GetMachineDetail(userID)
-		assertRawJSONEqual(t, got, want)
+		got := g.GetMachineDetail(dummyUID)
+		assertRawJSONEqual(t, got, wantedMsg)
 	})
 
-	t.Run("creditExchange get correct url and return result", func(t *testing.T) {
-		sid := gode.SessionID("sidSid123")
-		betBase := gode.BetBase("1:5")
-		var credit = 1000
-		expectedURL := `/amfphp/json.php/casino.slot.line243.BuBuGaoSheng.creditExchange/sidSid123/0/1:5/1000`
+	t.Run("getMachineDetail return connect result", func(t *testing.T) {
+		wantedMsg := json.RawMessage(`{"event":true,"data":{"event":true}}`)
+		connector := &StubConnector{
+			returnMsg: wantedMsg,
+		}
 
-		srv := NewTestingServer(t, expectedURL, `credit`)
-		defer srv.Close()
-
-		g, err := gode.NewFlash2dbGame(srv.URL, 5145)
-
+		g, err := gode.NewFlash2dbGame(connector, 5145)
 		assertNoError(t, err)
 
-		want := []byte(`credit`)
-		got := g.CreditExchange(sid, betBase, credit)
-		assertRawJSONEqual(t, got, want)
+		got := g.GetMachineDetail(dummyUID)
+		assertRawJSONEqual(t, got, wantedMsg)
 	})
 
-	t.Run("beginGame get correct url and return result", func(t *testing.T) {
-		var sid gode.SessionID = "sidSid123"
-		var betInfo = gode.BetInfo(`{"BetLevel":1}`)
-		expectedURL := `/amfphp/json.php/casino.slot.line243.BuBuGaoSheng.beginGame/sidSid123/0/{"BetLevel":1}`
+	t.Run("creditExchange return connect result", func(t *testing.T) {
+		wantedMsg := json.RawMessage(`{"event":true,"data":{"event":true}}`)
+		connector := &StubConnector{
+			returnMsg: wantedMsg,
+		}
 
-		srv := NewTestingServer(t, expectedURL, `begin`)
-		defer srv.Close()
-
-		g, err := gode.NewFlash2dbGame(srv.URL, 5145)
-
+		g, err := gode.NewFlash2dbGame(connector, 5145)
 		assertNoError(t, err)
 
-		want := []byte(`begin`)
-		got := g.BeginGame(sid, betInfo)
-		assertRawJSONEqual(t, got, want)
+		got := g.CreditExchange(dummySID, dummyBetBase, dummyCredit)
+		assertRawJSONEqual(t, got, wantedMsg)
 	})
 
-	t.Run("balanceExchange get correct url and return result", func(t *testing.T) {
-		var userID gode.UserID = 362907402
-		var hallID gode.HallID = 6
-		expectedURL := `/amfphp/json.php/casino.slot.line243.BuBuGaoSheng.balanceExchange/362907402/6/0`
+	t.Run("beginGame return connect result", func(t *testing.T) {
+		wantedMsg := json.RawMessage(`{"event":true,"data":{"event":true}}`)
+		connector := &StubConnector{
+			returnMsg: wantedMsg,
+		}
 
-		srv := NewTestingServer(t, expectedURL, `balance`)
-		defer srv.Close()
-
-		g, err := gode.NewFlash2dbGame(srv.URL, 5145)
-
+		g, err := gode.NewFlash2dbGame(connector, 5145)
 		assertNoError(t, err)
 
-		want := []byte(`balance`)
-		got := g.BalanceExchange(userID, hallID)
-		assertRawJSONEqual(t, got, want)
+		got := g.BeginGame(dummySID, dummyBetInfo)
+		assertRawJSONEqual(t, got, wantedMsg)
 	})
 
-	t.Run("machineLeave get correct url and return result", func(t *testing.T) {
-		var userID gode.UserID = 362907402
-		var hallID gode.HallID = 6
-		expectedURL := `/amfphp/json.php/casino.slot.line243.BuBuGaoSheng.machineLeave/362907402/6/0`
+	t.Run("balanceExchange return connect result", func(t *testing.T) {
+		wantedMsg := json.RawMessage(`{"event":true,"data":{"event":true}}`)
+		connector := &StubConnector{
+			returnMsg: wantedMsg,
+		}
 
-		srv := NewTestingServer(t, expectedURL, `leave`)
-		defer srv.Close()
-
-		g, err := gode.NewFlash2dbGame(srv.URL, 5145)
-
+		g, err := gode.NewFlash2dbGame(connector, 5145)
 		assertNoError(t, err)
 
-		want := []byte(`leave`)
-		got := g.LeaveMachine(userID, hallID)
-		assertRawJSONEqual(t, got, want)
+		got := g.BalanceExchange(dummyUID, dummyHID)
+		assertRawJSONEqual(t, got, wantedMsg)
 	})
-}
 
-func NewTestingServer(t *testing.T, expectedURL string, response string) *httptest.Server {
-	t.Helper()
-	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assertURLEqual(t, r.URL.Path, expectedURL)
-		_, _ = fmt.Fprint(w, response)
-	}))
+	t.Run("machineLeave return connect result", func(t *testing.T) {
+		wantedMsg := json.RawMessage(`{"event":true,"data":{"event":true}}`)
+		connector := &StubConnector{
+			returnMsg: wantedMsg,
+		}
+
+		g, err := gode.NewFlash2dbGame(connector, 5145)
+		assertNoError(t, err)
+
+		got := g.LeaveMachine(dummyUID, dummyHID)
+		assertRawJSONEqual(t, got, wantedMsg)
+	})
 }

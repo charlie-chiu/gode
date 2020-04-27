@@ -104,7 +104,7 @@ func (s *Server) handleMessage(ws *wsServer, msg []byte) {
 	sid := SessionID(data.SessionID)
 	switch data.Action {
 	case ClientLogin:
-		ws.writeBinaryMsg(s.makeSendJSON(ServerLogin, s.client.Login(sid)))
+		ws.writeBinaryMsg(s.makeSendJSON(ServerLogin, s.client.Login(sid, "127.0.0.1")))
 		ws.writeBinaryMsg(s.makeSendJSON("onTakeMachine", s.game.TakeMachine(s.client.UserID())))
 	case ClientOnLoadInfo:
 		msg := s.makeSendJSON("onOnLoadInfo2", s.game.OnLoadInfo(s.client.UserID()))

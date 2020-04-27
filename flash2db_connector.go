@@ -54,7 +54,7 @@ func (f *Flash2dbConnector) get(url string) (json.RawMessage, error) {
 		log.Print("ioutil ReadAll error : ", err)
 		return nil, err
 	}
-
+	fmt.Printf("---\nrequest:%s\nresponse:%v\n", url, string(bytes))
 	return bytes, nil
 }
 
