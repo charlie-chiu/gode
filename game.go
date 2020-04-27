@@ -33,3 +33,7 @@ type (
 	BetInfo  json.RawMessage
 	BetBase  string
 )
+
+func (b BetInfo) String() string {
+	return string(b)
+}
