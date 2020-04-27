@@ -9,44 +9,56 @@ import (
 	"strings"
 )
 
+//By convention, one-method interfaces are named by the method name plus an -er suffix ...
+//https://golang.org/doc/effective_go.html#interface-names
 type Connector interface {
-	Connect(function string, parameters ...interface{}) json.RawMessage
+	Connect(function string, parameters ...interface{}) (json.RawMessage, error)
 }
 
-type Flash2db struct {
+type Flash2dbConnector struct {
 	url string
 }
 
-func NewFlash2db(host string) *Flash2db {
+func NewFlash2dbConnector(host string) *Flash2dbConnector {
 	const prefixPath = `/amfphp/json.php`
-	return &Flash2db{
+	return &Flash2dbConnector{
 		url: host + prefixPath,
 	}
 }
 
-func (f *Flash2db) Connect(function string, parameters ...interface{}) json.RawMessage {
-	f.get(f.generateURL(function, parameters...))
+func (f *Flash2dbConnector) Connect(function string, parameters ...interface{}) (json.RawMessage, error) {
+	msg, err := f.get(f.generateURL(function, parameters...))
+	if err != nil {
+		return nil, err
+	}
 
-	return json.RawMessage(``)
+	return msg, nil
 }
 
-func (f *Flash2db) get(url string) json.RawMessage {
+func (f *Flash2dbConnector) get(url string) (json.RawMessage, error) {
 	response, err := http.Get(url)
 	if err != nil {
 		log.Fatal("http Get Error", err)
+		return nil, err
 	}
 	//todo: should we do anything?
 	//noinspection GoUnhandledErrorResult
 	defer response.Body.Close()
 
+	if response.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("flash2db response code not OK, got %d", response.StatusCode)
+	}
+
 	bytes, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		log.Print("ioutil ReadAll error : ", err)
+		return nil, err
 	}
-	return bytes
+
+	return bytes, nil
 }
 
-func (f *Flash2db) generateURL(phpFunctionName string, param ...interface{}) string {
+func (f *Flash2dbConnector) generateURL(phpFunctionName string, param ...interface{}) string {
 	b := strings.Builder{}
 
 	b.WriteString(fmt.Sprintf("%s/%s", f.url, phpFunctionName))
