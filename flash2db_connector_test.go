@@ -25,6 +25,20 @@ func TestFlash2db_connect(t *testing.T) {
 		assertURLEqual(t, spyHandler.requestedURL[0], expectedURL)
 	})
 
+	t.Run("should get correct url with BetInfo", func(t *testing.T) {
+		spyHandler := &SpyHandler{}
+		svr := httptest.NewServer(http.HandlerFunc(spyHandler.spy))
+		defer svr.Close()
+
+		sid := gode.SessionID("19870604xi")
+		betInfo := gode.BetInfo(`{"BetLevel":3}`)
+		flash2db := gode.NewFlash2dbConnector(svr.URL)
+		_, _ = flash2db.Connect("beginGame", sid, betInfo)
+
+		expectedURL := fmt.Sprintf(`/amfphp/json.php/beginGame/%s/%s`, sid, betInfo)
+		assertURLEqual(t, spyHandler.requestedURL[0], expectedURL)
+	})
+
 	t.Run("should return response from flash2db", func(t *testing.T) {
 		svrResponse := "msg from server"
 		svr := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
