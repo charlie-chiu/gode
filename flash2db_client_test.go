@@ -3,8 +3,7 @@ package gode_test
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
-	"net/http/httptest"
+	"reflect"
 	"testing"
 
 	"github.com/charlie-chiu/gode"
@@ -35,39 +34,62 @@ func TestFlash2dbClientBeforeFetchInformation(t *testing.T) {
 	})
 }
 
-func TestFlash2dbClient_Login(t *testing.T) {
-	t.Run("get correct url", func(t *testing.T) {
-		// arrange
-		spyHandler := &SpyHandler{}
-		svr := httptest.NewServer(http.HandlerFunc(spyHandler.spy))
-		defer svr.Close()
+type SpyConnector struct {
+	funcCalled []funcCall
+}
 
-		client := gode.NewFlash2dbClient(gode.NewFlash2dbConnector(svr.URL))
+type funcCall struct {
+	funcName string
+	args     []interface{}
+}
+
+func (c *SpyConnector) Connect(function string, parameters ...interface{}) (json.RawMessage, error) {
+	c.funcCalled = append(c.funcCalled, funcCall{
+		funcName: function,
+		args:     parameters,
+	})
+
+	return json.RawMessage(`{}`), nil
+}
+
+type MockConnector struct {
+	returnMsg json.RawMessage
+	returnErr error
+}
+
+func (c *MockConnector) Connect(string, ...interface{}) (json.RawMessage, error) {
+	return c.returnMsg, c.returnErr
+}
+
+func TestFlash2dbClient_Login(t *testing.T) {
+	const LoginFunction = "Client.loginCheck"
+
+	t.Run("connect with correct args", func(t *testing.T) {
+		spyConnector := &SpyConnector{}
+		client := gode.NewFlash2dbClient(spyConnector)
 
 		sid := gode.SessionID("19870604xi")
 		ip := "127.0.0.1"
-		expectedURL := fmt.Sprintf(`/amfphp/json.php/Client.loginCheck/%s/%s`, sid, ip)
+		client.Login(sid, ip)
 
-		// act
-		client.Login(sid)
+		expectedCalls := []funcCall{
+			{LoginFunction, []interface{}{sid, ip}},
+		}
 
-		// assert
-		assertURLEqual(t, spyHandler.requestedURL[0], expectedURL)
+		assertFuncCalledSame(t, expectedCalls, spyConnector.funcCalled)
 	})
 
 	t.Run("store updated sid, uid and hid after successful login", func(t *testing.T) {
 		sid := gode.SessionID("19870604xi")
 		uid := gode.UserID(362907402)
 		hid := gode.HallID(32)
-		svr := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
-			//client.loginCheck return HallID as string.
-			_, _ = fmt.Fprintf(w, `{"data":{"UserID":%d,"Sid":"%s","HallID":"%d"},"event":true}`, uid, sid, hid)
-		}))
-		defer svr.Close()
+		msg := fmt.Sprintf(`{"data":{"UserID":%d,"Sid":"%s","HallID":"%d"},"event":true}`, uid, sid, hid)
 
-		connector := gode.NewFlash2dbConnector(svr.URL)
-		client := gode.NewFlash2dbClient(connector)
-		client.Login("")
+		client := gode.NewFlash2dbClient(&MockConnector{
+			returnMsg: json.RawMessage(msg),
+		})
+
+		client.Login("dummySID", "dummyIP")
 
 		assertUserIDEqual(t, client.UserID(), uid)
 		assertHallIDEqual(t, client.HallID(), hid)
@@ -75,16 +97,23 @@ func TestFlash2dbClient_Login(t *testing.T) {
 	})
 
 	t.Run("login return msg got from flash2db", func(t *testing.T) {
-		uid := gode.UserID(9527)
-		msg := fmt.Sprintf(`{"data":{"UserID":%d},"event":true}`, uid)
-		svr := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
-			_, _ = fmt.Fprintf(w, msg)
-		}))
-		defer svr.Close()
+		msg := fmt.Sprintf(`{"data":{"UserID":123,"Sid":"dummySID","HallID":"123"},"event":true}`)
 
-		client := gode.NewFlash2dbClient(gode.NewFlash2dbConnector(svr.URL))
-		got := client.Login("")
+		client := gode.NewFlash2dbClient(&MockConnector{
+			returnMsg: json.RawMessage(msg),
+		})
+
+		got := client.Login("dummySID", "dummyIP")
 
 		assertRawJSONEqual(t, got, json.RawMessage(msg))
 	})
+}
+
+func assertFuncCalledSame(t *testing.T, expectedCalls, got []funcCall) {
+	t.Helper()
+	if !reflect.DeepEqual(expectedCalls, got) {
+		fmt.Printf("expected:%v\n", expectedCalls)
+		fmt.Printf("     got:%v\n", got)
+		t.Errorf("called function not match")
+	}
 }

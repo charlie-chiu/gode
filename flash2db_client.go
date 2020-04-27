@@ -47,9 +47,8 @@ type LoginCheck struct {
 	Event bool `json:"event"`
 }
 
-func (c *Flash2dbClient) Login(sid SessionID) json.RawMessage {
+func (c *Flash2dbClient) Login(sid SessionID, ip string) json.RawMessage {
 	const function = "Client.loginCheck"
-	ip := "127.0.0.1"
 	rawMsg, _ := c.conn.Connect(function, sid, ip)
 
 	loginCheck := &LoginCheck{}
