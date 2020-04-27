@@ -89,8 +89,8 @@ func TestFlash2dbGame(t *testing.T) {
 			{Prefix + "getMachineDetail", []interface{}{uid, gc}},
 			{Prefix + "creditExchange", []interface{}{sid, gc, gode.BetBase("1:1"), 1000}},
 			{Prefix + "beginGame", []interface{}{sid, gc, gode.BetInfo(`{"BetLevel":1}`)}},
-			{Prefix + "balanceExchange", []interface{}{uid, hid}},
-			{Prefix + "machineLeave", []interface{}{uid, hid}},
+			{Prefix + "balanceExchange", []interface{}{uid, hid, gc}},
+			{Prefix + "machineLeave", []interface{}{uid, hid, gc}},
 		}
 
 		assertFuncCalledSame(t, expectedCalls, spyConnector.funcCalled)

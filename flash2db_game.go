@@ -85,13 +85,13 @@ func (g *Flash2dbGame) CreditExchange(sid SessionID, betBase BetBase, credit int
 }
 
 func (g *Flash2dbGame) BalanceExchange(uid UserID, hid HallID) json.RawMessage {
-	apiResult, _ := g.conn.Connect(g.funcPrefix+BalanceExchange, uid, hid)
+	apiResult, _ := g.conn.Connect(g.funcPrefix+BalanceExchange, uid, hid, g.gameCode)
 
 	return apiResult
 }
 
 func (g *Flash2dbGame) LeaveMachine(uid UserID, hid HallID) json.RawMessage {
-	apiResult, _ := g.conn.Connect(g.funcPrefix+MachineLeave, uid, hid)
+	apiResult, _ := g.conn.Connect(g.funcPrefix+MachineLeave, uid, hid, g.gameCode)
 
 	return apiResult
 }
