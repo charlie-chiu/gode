@@ -10,8 +10,9 @@ import (
 
 func main() {
 	host := "http://103.241.238.141/"
-	client := gode.NewFlash2dbClient(host)
-	game, err := gode.NewFlash2dbGame(host, 5145)
+	flash2dbConnector := gode.NewFlash2dbConnector(host)
+	client := gode.NewFlash2dbClient(flash2dbConnector)
+	game, err := gode.NewFlash2dbGame(flash2dbConnector, 5145)
 	if err != nil {
 		log.Fatal("error when NewFlash2dbGame", err)
 	}
