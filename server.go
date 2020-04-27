@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 type Server struct {
@@ -78,8 +79,10 @@ func (s *Server) gameHandler(w http.ResponseWriter, r *http.Request) {
 				s.handleDisconnect()
 				closed = true
 			}
+		//extract interval and jp msg to Jackpot interface
+		case <-time.Tick(300 * time.Millisecond):
+			ws.writeBinaryMsg(s.makeSendJSON("updateJP", []byte(`[4,3,2,1]`)))
 		}
-
 		if closed {
 			break
 		}

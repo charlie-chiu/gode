@@ -233,6 +233,34 @@ func TestWebSocketGame(t *testing.T) {
 	})
 }
 
+func TestWebSocketJackpot(t *testing.T) {
+	t.Run("should send JP info after take machine", func(t *testing.T) {
+		stubClient := &StubClient{}
+		stubGame := &SpyPhpGame{
+			TakeMachineResult: `{"event":"TakeMachine"}`,
+		}
+		svr := httptest.NewServer(gode.NewServer(stubClient, stubGame))
+		wsClient := mustDialWS(t, makeWebSocketURL(svr, "/ws/game"))
+		defer svr.Close()
+		defer wsClient.Close()
+
+		//initialize
+		assertReceiveBinaryMsg(t, wsClient, `{"action":"ready","result":{"event":true,"data":null}}`)
+		writeBinaryMsg(t, wsClient, `{"action":"loginBySid","sid":""}`)
+		assertReceiveBinaryMsg(t, wsClient, `{"action":"onLogin","result":{"event":"login"}}`)
+		assertReceiveBinaryMsg(t, wsClient, `{"action":"onTakeMachine","result":{"event":"TakeMachine"}}`)
+
+		//should receive 3 Jackpot update with 1 sec.
+		timeOut := time.Second
+		const UpdateJackpot = `{"action":"updateJP","result":[4,3,2,1]}`
+		within(t, timeOut, func() {
+			assertReceiveBinaryMsg(t, wsClient, UpdateJackpot)
+			assertReceiveBinaryMsg(t, wsClient, UpdateJackpot)
+			assertReceiveBinaryMsg(t, wsClient, UpdateJackpot)
+		})
+	})
+}
+
 func writeBinaryMsg(t *testing.T, wsClient *websocket.Conn, msg string) {
 	err := wsClient.WriteMessage(websocket.BinaryMessage, []byte(msg))
 	if err != nil {
