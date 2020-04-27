@@ -72,7 +72,6 @@ type StubClient struct {
 func (c StubClient) Login(gode.SessionID, string) json.RawMessage {
 	return json.RawMessage(`{"event":"login"}`)
 }
-
 func (c StubClient) UserID() gode.UserID {
 	return c.UID
 }
@@ -81,6 +80,21 @@ func (c StubClient) HallID() gode.HallID {
 }
 func (c StubClient) SessionID() gode.SessionID {
 	return c.SID
+}
+
+func TestGet(t *testing.T) {
+	t.Run("/ returns 404", func(t *testing.T) {
+		stubClient := &StubClient{}
+		stubGame := &SpyPhpGame{}
+		server := gode.NewServer(stubClient, stubGame)
+
+		request, _ := http.NewRequest(http.MethodGet, "/", nil)
+		responseRecorder := httptest.NewRecorder()
+
+		server.ServeHTTP(responseRecorder, request)
+
+		assertResponseCode(t, responseRecorder.Code, http.StatusNotFound)
+	})
 }
 
 func TestWebSocketGame(t *testing.T) {
@@ -98,44 +112,39 @@ func TestWebSocketGame(t *testing.T) {
 			LeaveMachineResult:     `{"event":"LeaveMachine"}`,
 		}
 		server := httptest.NewServer(gode.NewServer(stubClient, stubGame))
-		url := makeWebSocketURL(server, "/ws/game")
-		wsClient := mustDialWS(t, url)
+		wsClient := mustDialWS(t, makeWebSocketURL(server, "/ws/game"))
 		defer server.Close()
+		defer wsClient.Close()
 
 		within(t, timeOut, func() {
 			//ready
-			assertWSReceiveBinaryMsg(t, wsClient, `{"action":"ready","result":{"event":true,"data":null}}`)
+			assertReceiveBinaryMsg(t, wsClient, `{"action":"ready","result":{"event":true,"data":null}}`)
 
 			//ClientLogin
 			writeBinaryMsg(t, wsClient, `{"action":"loginBySid","sid":"21d9b36e42c8275a4359f6815b859df05ec2bb0a"}`)
-			assertWSReceiveBinaryMsg(t, wsClient, `{"action":"onLogin","result":{"event":"login"}}`)
-			assertWSReceiveBinaryMsg(t, wsClient, `{"action":"onTakeMachine","result":{"event":"TakeMachine"}}`)
+			assertReceiveBinaryMsg(t, wsClient, `{"action":"onLogin","result":{"event":"login"}}`)
+			assertReceiveBinaryMsg(t, wsClient, `{"action":"onTakeMachine","result":{"event":"TakeMachine"}}`)
 
 			//ClientOnLoadInfo
 			writeBinaryMsg(t, wsClient, `{"action":"onLoadInfo2","sid":"21d9b36e42c8275a4359f6815b859df05ec2bb0a"}`)
-			assertWSReceiveBinaryMsg(t, wsClient, `{"action":"onOnLoadInfo2","result":{"event":"LoadInfo"}}`)
+			assertReceiveBinaryMsg(t, wsClient, `{"action":"onOnLoadInfo2","result":{"event":"LoadInfo"}}`)
 
 			//ClientGetMachineDetail
 			writeBinaryMsg(t, wsClient, `{"action":"getMachineDetail","sid":"21d9b36e42c8275a4359f6815b859df05ec2bb0a"}`)
-			assertWSReceiveBinaryMsg(t, wsClient, `{"action":"onGetMachineDetail","result":{"event":"MachineDetail"}}`)
+			assertReceiveBinaryMsg(t, wsClient, `{"action":"onGetMachineDetail","result":{"event":"MachineDetail"}}`)
 
 			//開分
 			writeBinaryMsg(t, wsClient, `{"action":"creditExchange"}`)
-			assertWSReceiveBinaryMsg(t, wsClient, `{"action":"onCreditExchange","result":{"event":"CreditExchange"}}`)
+			assertReceiveBinaryMsg(t, wsClient, `{"action":"onCreditExchange","result":{"event":"CreditExchange"}}`)
 
 			//begin game
 			writeBinaryMsg(t, wsClient, `{"action":"beginGame4"}`)
-			assertWSReceiveBinaryMsg(t, wsClient, `{"action":"onBeginGame","result":{"event":"BeginGame"}}`)
+			assertReceiveBinaryMsg(t, wsClient, `{"action":"onBeginGame","result":{"event":"BeginGame"}}`)
 
 			//洗分
 			writeBinaryMsg(t, wsClient, `{"action":"balanceExchange"}`)
-			assertWSReceiveBinaryMsg(t, wsClient, `{"action":"onBalanceExchange","result":{"event":"BalanceExchange"}}`)
+			assertReceiveBinaryMsg(t, wsClient, `{"action":"onBalanceExchange","result":{"event":"BalanceExchange"}}`)
 		})
-
-		err := wsClient.Close()
-		if err != nil {
-			t.Errorf("problem closing dialer %v", err)
-		}
 	})
 
 	t.Run("should call leaveMachine when ws disconnect", func(t *testing.T) {
@@ -151,7 +160,7 @@ func TestWebSocketGame(t *testing.T) {
 		defer svr.Close()
 
 		//ready
-		assertWSReceiveBinaryMsg(t, wsClient, `{"action":"ready","result":{"event":true,"data":null}}`)
+		assertReceiveBinaryMsg(t, wsClient, `{"action":"ready","result":{"event":true,"data":null}}`)
 
 		//ClientLogin
 		writeBinaryMsg(t, wsClient, `{"action":"loginBySid","sid":"21d9b36e42c8275a4359f6815b859df05ec2bb0a"}`)
@@ -178,7 +187,7 @@ func TestWebSocketGame(t *testing.T) {
 		defer svr.Close()
 
 		//ready
-		assertWSReceiveBinaryMsg(t, wsClient, `{"action":"ready","result":{"event":true,"data":null}}`)
+		assertReceiveBinaryMsg(t, wsClient, `{"action":"ready","result":{"event":true,"data":null}}`)
 
 		//beginGame
 		wantedSID := gode.SessionID("21d9")
@@ -204,7 +213,7 @@ func TestWebSocketGame(t *testing.T) {
 		defer svr.Close()
 
 		//ready
-		assertWSReceiveBinaryMsg(t, wsClient, `{"action":"ready","result":{"event":true,"data":null}}`)
+		assertReceiveBinaryMsg(t, wsClient, `{"action":"ready","result":{"event":true,"data":null}}`)
 
 		wantedSID := gode.SessionID("21d9")
 		betBase := gode.BetBase("1:1")
@@ -231,7 +240,7 @@ func writeBinaryMsg(t *testing.T, wsClient *websocket.Conn, msg string) {
 	}
 }
 
-func assertWSReceiveBinaryMsg(t *testing.T, dialer *websocket.Conn, want string) {
+func assertReceiveBinaryMsg(t *testing.T, dialer *websocket.Conn, want string) {
 	t.Helper()
 	const expectedType = websocket.BinaryMessage
 	mt, p, err := dialer.ReadMessage()
@@ -276,21 +285,6 @@ func mustDialWS(t *testing.T, url string) *websocket.Conn {
 func makeWebSocketURL(server *httptest.Server, path string) string {
 	url := "ws" + strings.TrimPrefix(server.URL, "http") + path
 	return url
-}
-
-func TestGet(t *testing.T) {
-	t.Run("/ returns 404", func(t *testing.T) {
-		stubClient := &StubClient{}
-		stubGame := &SpyPhpGame{}
-		server := gode.NewServer(stubClient, stubGame)
-
-		request, _ := http.NewRequest(http.MethodGet, "/", nil)
-		responseRecorder := httptest.NewRecorder()
-
-		server.ServeHTTP(responseRecorder, request)
-
-		assertResponseCode(t, responseRecorder.Code, http.StatusNotFound)
-	})
 }
 
 func assertResponseCode(t *testing.T, got, expected int) {
