@@ -82,11 +82,20 @@ func (c StubClient) SessionID() gode.SessionID {
 	return c.SID
 }
 
+type dummyJackpot struct{}
+
+func (j *dummyJackpot) Interval() time.Duration {
+	return time.Second
+}
+func (j *dummyJackpot) Fetch() json.RawMessage {
+	return json.RawMessage(`{"event":"dada"}`)
+}
+
 func TestGet(t *testing.T) {
 	t.Run("/ returns 404", func(t *testing.T) {
 		stubClient := &StubClient{}
 		stubGame := &SpyPhpGame{}
-		server := gode.NewServer(stubClient, stubGame)
+		server := gode.NewServer(stubClient, stubGame, &dummyJackpot{})
 
 		request, _ := http.NewRequest(http.MethodGet, "/", nil)
 		responseRecorder := httptest.NewRecorder()
@@ -111,7 +120,7 @@ func TestWebSocketGame(t *testing.T) {
 			CreditExchangeResult:   `{"event":"CreditExchange"}`,
 			LeaveMachineResult:     `{"event":"LeaveMachine"}`,
 		}
-		server := httptest.NewServer(gode.NewServer(stubClient, stubGame))
+		server := httptest.NewServer(gode.NewServer(stubClient, stubGame, &dummyJackpot{}))
 		wsClient := mustDialWS(t, makeWebSocketURL(server, "/ws/game"))
 		defer server.Close()
 		defer wsClient.Close()
@@ -154,7 +163,7 @@ func TestWebSocketGame(t *testing.T) {
 			TakeMachineResult:  `{"event":"TakeMachine"}`,
 			LeaveMachineCalled: false,
 		}
-		svr := httptest.NewServer(gode.NewServer(stubClient, stubGame))
+		svr := httptest.NewServer(gode.NewServer(stubClient, stubGame, &dummyJackpot{}))
 		url := makeWebSocketURL(svr, "/ws/game")
 		wsClient := mustDialWS(t, url)
 		defer svr.Close()
@@ -181,7 +190,7 @@ func TestWebSocketGame(t *testing.T) {
 		stubGame := &SpyPhpGame{
 			BeginGameResult: `{"action":"beginGame"}`,
 		}
-		svr := httptest.NewServer(gode.NewServer(stubClient, stubGame))
+		svr := httptest.NewServer(gode.NewServer(stubClient, stubGame, &dummyJackpot{}))
 		url := makeWebSocketURL(svr, "/ws/game")
 		wsClient := mustDialWS(t, url)
 		defer svr.Close()
@@ -207,7 +216,7 @@ func TestWebSocketGame(t *testing.T) {
 		stubGame := &SpyPhpGame{
 			CreditExchangeResult: `{"action":"creditExchange"}`,
 		}
-		svr := httptest.NewServer(gode.NewServer(stubClient, stubGame))
+		svr := httptest.NewServer(gode.NewServer(stubClient, stubGame, &dummyJackpot{}))
 		url := makeWebSocketURL(svr, "/ws/game")
 		wsClient := mustDialWS(t, url)
 		defer svr.Close()
@@ -233,13 +242,30 @@ func TestWebSocketGame(t *testing.T) {
 	})
 }
 
+type StubJackpot struct {
+	BroadcastInterval time.Duration
+	FetchResult       json.RawMessage
+}
+
+func (j *StubJackpot) Interval() time.Duration {
+	return j.BroadcastInterval
+}
+
+func (j *StubJackpot) Fetch() json.RawMessage {
+	return j.FetchResult
+}
+
 func TestWebSocketJackpot(t *testing.T) {
 	t.Run("should send JP info after take machine", func(t *testing.T) {
 		stubClient := &StubClient{}
 		stubGame := &SpyPhpGame{
 			TakeMachineResult: `{"event":"TakeMachine"}`,
 		}
-		svr := httptest.NewServer(gode.NewServer(stubClient, stubGame))
+		stubJackpot := &StubJackpot{
+			BroadcastInterval: 30 * time.Millisecond,
+			FetchResult:       json.RawMessage(`[4,3,2,1]`),
+		}
+		svr := httptest.NewServer(gode.NewServer(stubClient, stubGame, stubJackpot))
 		wsClient := mustDialWS(t, makeWebSocketURL(svr, "/ws/game"))
 		defer svr.Close()
 		defer wsClient.Close()
@@ -250,8 +276,8 @@ func TestWebSocketJackpot(t *testing.T) {
 		assertReceiveBinaryMsg(t, wsClient, `{"action":"onLogin","result":{"event":"login"}}`)
 		assertReceiveBinaryMsg(t, wsClient, `{"action":"onTakeMachine","result":{"event":"TakeMachine"}}`)
 
-		//should receive 3 Jackpot update with 1 sec.
-		timeOut := time.Second
+		//should receive 3 Jackpot update with 100 millisecond.
+		timeOut := 100 * time.Millisecond
 		const UpdateJackpot = `{"action":"updateJP","result":[4,3,2,1]}`
 		within(t, timeOut, func() {
 			assertReceiveBinaryMsg(t, wsClient, UpdateJackpot)

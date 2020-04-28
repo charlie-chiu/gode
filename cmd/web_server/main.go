@@ -1,9 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/charlie-chiu/gode"
 )
@@ -16,11 +18,28 @@ func main() {
 	if err != nil {
 		log.Fatal("error when NewFlash2dbGame", err)
 	}
-	server := gode.NewServer(client, game)
+	stubJackpot := &StubJackpot{
+		BroadcastInterval: 1 * time.Minute,
+		FetchResult:       json.RawMessage(`[4,3,2,1]`),
+	}
+	server := gode.NewServer(client, game, stubJackpot)
 
 	fmt.Println("start listen...")
 	err = http.ListenAndServe(":80", server)
 	if err != nil {
 		log.Fatalf("could not start server %v", err)
 	}
+}
+
+type StubJackpot struct {
+	BroadcastInterval time.Duration
+	FetchResult       json.RawMessage
+}
+
+func (j *StubJackpot) Interval() time.Duration {
+	return j.BroadcastInterval
+}
+
+func (j *StubJackpot) Fetch() json.RawMessage {
+	return j.FetchResult
 }

@@ -11,8 +11,9 @@ import (
 
 type Server struct {
 	http.Handler
-	game   Game
-	client Client
+	game    Game
+	client  Client
+	jackpot Jackpot
 }
 
 const (
@@ -30,10 +31,11 @@ const (
 	ServerLogin = "onLogin"
 )
 
-func NewServer(c Client, g Game) *Server {
+func NewServer(c Client, g Game, j Jackpot) *Server {
 	server := &Server{
-		game:   g,
-		client: c,
+		game:    g,
+		client:  c,
+		jackpot: j,
 	}
 
 	router := http.NewServeMux()
@@ -79,9 +81,8 @@ func (s *Server) gameHandler(w http.ResponseWriter, r *http.Request) {
 				s.handleDisconnect()
 				closed = true
 			}
-		//extract interval and jp msg to Jackpot interface
-		case <-time.Tick(300 * time.Millisecond):
-			ws.writeBinaryMsg(s.makeSendJSON("updateJP", []byte(`[4,3,2,1]`)))
+		case <-time.Tick(s.jackpot.Interval()):
+			ws.writeBinaryMsg(s.makeSendJSON("updateJP", s.jackpot.Fetch()))
 		}
 		if closed {
 			break
@@ -157,7 +158,7 @@ func (s *Server) makeSendJSON(action string, APIResult json.RawMessage) json.Raw
 		Result: APIResult,
 	})
 	if err != nil {
-		log.Printf("Problem marshal JSON: action %q, APIResult %v, %v", action, APIResult, err)
+		log.Printf("Problem marshal JSON: action %q, APIResult %v, %v", action, string(APIResult), err)
 	}
 	return msg
 }
