@@ -2,7 +2,7 @@ package gode
 
 import (
 	"encoding/json"
-	"log"
+	"fmt"
 	"strconv"
 )
 
@@ -32,12 +32,21 @@ func (c *Flash2dbClient) SessionID() SessionID {
 	return c.sid
 }
 
+func (c *Flash2dbClient) Login(sid SessionID, ip string) json.RawMessage {
+	const function = "Client.loginCheck"
+	rawMsg, _ := c.conn.Connect(function, sid, ip)
+
+	_ = c.storeLoginCheckResult(rawMsg)
+
+	return rawMsg
+}
+
 // result of flash2db client.loginCheck
 type LoginCheck struct {
 	Data struct {
-		UserID       int    `json:"UserID"`
-		Sid          string `json:"Sid"`
-		HallID       string `json:"HallID"`
+		UserID int    `json:"UserID"`
+		Sid    string `json:"Sid"`
+		//HallID       string `json:"HallID"`
 		GameID       string `json:"GameID"`
 		COID         string `json:"COID"`
 		Test         string `json:"Test"`
@@ -47,21 +56,30 @@ type LoginCheck struct {
 	Event bool `json:"event"`
 }
 
-func (c *Flash2dbClient) Login(sid SessionID, ip string) json.RawMessage {
-	const function = "Client.loginCheck"
-	rawMsg, _ := c.conn.Connect(function, sid, ip)
-
-	loginCheck := &LoginCheck{}
-	err := json.Unmarshal(rawMsg, loginCheck)
+func (c *Flash2dbClient) storeLoginCheckResult(rawMsg json.RawMessage) error {
+	// store
+	okData := &LoginCheck{}
+	err := json.Unmarshal(rawMsg, okData)
 	if err != nil {
-		log.Panicf("JSON unmarshal error, %v", err)
+		return fmt.Errorf("login check parsing error, %v", err)
 	}
+	c.uid = UserID(okData.Data.UserID)
+	c.sid = SessionID(okData.Data.Sid)
 
-	c.hid = toHallID(loginCheck.Data.HallID)
-	c.uid = UserID(loginCheck.Data.UserID)
-	c.sid = SessionID(loginCheck.Data.Sid)
+	//store HallID : number or string
 
-	return rawMsg
+	//fmt.Printf("(%T)%+v\n", unknownType.Data["HallID"], unknownType.Data["HallID"])
+	unknownType := struct {
+		Data  map[string]interface{} `json:"data"`
+		Event bool                   `json:"event"`
+	}{}
+	err = json.Unmarshal(rawMsg, &unknownType)
+	if err != nil {
+		return fmt.Errorf("login check parsing error, %v", err)
+	}
+	c.hid = toHallID(unknownType.Data["HallID"])
+
+	return nil
 }
 
 func toHallID(input interface{}) (hid HallID) {
@@ -70,6 +88,8 @@ func toHallID(input interface{}) (hid HallID) {
 		return
 	case int:
 		return HallID(input.(int))
+	case float64:
+		return HallID(int(input.(float64)))
 	case string:
 		i, _ := strconv.Atoi(input.(string))
 		return HallID(i)

@@ -99,6 +99,20 @@ func TestFlash2dbClient_Login(t *testing.T) {
 		assertSessionIDEqual(t, client.SessionID(), sid)
 	})
 
+	t.Run("can handle HallID in number type", func(t *testing.T) {
+		// User新建 Session 時，第一次呼叫API ，HallID 是 number， 第二次之後會變成 string
+		hid := gode.HallID(32)
+		msg := fmt.Sprintf(`{"data":{"UserID":123,"Sid":"xi","HallID":%d},"event":true}`, hid)
+
+		client := gode.NewFlash2dbClient(&StubConnector{
+			returnMsg: json.RawMessage(msg),
+		})
+
+		client.Login("dummySID", "dummyIP")
+
+		assertHallIDEqual(t, client.HallID(), hid)
+	})
+
 	t.Run("login return msg got from flash2db", func(t *testing.T) {
 		msg := fmt.Sprintf(`{"data":{"UserID":123,"Sid":"dummySID","HallID":"123"},"event":true}`)
 
